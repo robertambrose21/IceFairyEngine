@@ -17,22 +17,9 @@
     <ClInclude Include="src\core\utilities\icexception.h" />
     <ClInclude Include="src\core\utilities\logger.h" />
     <ClInclude Include="src\core\utilities\resource.h" />
-    <ClInclude Include="src\graphics\bufferobject.h" />
-    <ClInclude Include="src\graphics\drawable.h" />
-    <ClInclude Include="src\graphics\glinclude.h" />
-    <ClInclude Include="src\graphics\lighting\pointlight.h" />
-    <ClInclude Include="src\graphics\material.h" />
-    <ClInclude Include="src\graphics\scenenode.h" />
-    <ClInclude Include="src\graphics\sceneobject.h" />
-    <ClInclude Include="src\graphics\scenetree.h" />
-    <ClInclude Include="src\graphics\shader.h" />
-    <ClInclude Include="src\graphics\shapes\cubeobject.h" />
-    <ClInclude Include="src\graphics\stbi\stb_image.h" />
-    <ClInclude Include="src\graphics\vertexobject.h" />
     <ClInclude Include="src\math\colour.h" />
     <ClInclude Include="src\math\matrix.h" />
     <ClInclude Include="src\math\vector.h" />
-    <ClInclude Include="src\modules\graphicsmodule.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\application.cpp" />
@@ -41,18 +28,6 @@
     <ClCompile Include="src\core\utilities\icexception.cpp" />
     <ClCompile Include="src\core\utilities\logger.cpp" />
     <ClCompile Include="src\core\utilities\resource.cpp" />
-    <ClCompile Include="src\graphics\bufferobject.cpp" />
-    <ClCompile Include="src\graphics\drawable.cpp" />
-    <ClCompile Include="src\graphics\lighting\pointlight.cpp" />
-    <ClCompile Include="src\graphics\material.cpp" />
-    <ClCompile Include="src\graphics\scenenode.cpp" />
-    <ClCompile Include="src\graphics\sceneobject.cpp" />
-    <ClCompile Include="src\graphics\scenetree.cpp" />
-    <ClCompile Include="src\graphics\shader.cpp" />
-    <ClCompile Include="src\graphics\shapes\cubeobject.cpp" />
-    <ClCompile Include="src\graphics\stbi\stb_image.c" />
-    <ClCompile Include="src\graphics\vertexobject.cpp" />
-    <ClCompile Include="src\modules\graphicsmodule.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{CCE31805-A8A6-4597-93E3-8D507FDA8025}</ProjectGuid>
@@ -112,10 +87,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>glew32.lib;opengl32.lib;glfw3.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>..\..\Dependencies\glfw-3.1.2.bin.WIN32\lib-vc2013;..\..\Dependencies\glew32\glew-1.9.0\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -139,10 +116,12 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>glew32.lib;opengl32.lib;glfw3.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>..\..\Dependencies\glfw-3.1.2.bin.WIN32\lib-vc2013;..\..\Dependencies\glew32\glew-1.9.0\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

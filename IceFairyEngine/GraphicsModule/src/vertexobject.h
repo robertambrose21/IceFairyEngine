@@ -4,9 +4,9 @@
 #include <vector>
 
 #include "glinclude.h"
-#include "../math/vector.h"
-#include "../core/utilities/logger.h"
-#include "../core/utilities/icexception.h"
+#include "math/vector.h"
+#include "core/utilities/logger.h"
+#include "core/utilities/icexception.h"
 
 namespace IceFairy {
 	/*! \brief Thrown when the number of points and normals specified differs. */

@@ -6,9 +6,9 @@
 #include "glinclude.h"
 #include "shader.h"
 #include "stbi/stb_image.h"
-#include "../math/colour.h"
-#include "../core/utilities/resource.h"
-#include "../core/utilities/icexception.h"
+#include "math/colour.h"
+#include "core/utilities/resource.h"
+#include "core/utilities/icexception.h"
 
 namespace IceFairy {
     /*! \brief Thrown when the texture unit exceeds the limit (31). */

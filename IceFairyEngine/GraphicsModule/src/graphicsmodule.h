@@ -4,14 +4,16 @@
 #include <vector>
 #include <functional>
 
-#include "../graphics/glinclude.h"
-#include "../graphics/drawable.h"
-#include "../core/module.h"
-#include "../core/utilities/icexception.h"
-#include "../math/colour.h"
-#include "../graphics/shader.h"
-#include "../graphics/scenetree.h"
-#include "../graphics/bufferobject.h"
+#include "glinclude.h"
+#include "drawable.h"
+#include "core/module.h"
+#include "core/utilities/icexception.h"
+#include "math/colour.h"
+#include "shader.h"
+#include "scenetree.h"
+#include "bufferobject.h"
+
+// TODO: New project!
 
 namespace IceFairy {
     /*! \brief Thrown if the main shader has not been set */

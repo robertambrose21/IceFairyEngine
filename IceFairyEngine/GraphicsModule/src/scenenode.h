@@ -5,8 +5,8 @@
 #include <vector>
 
 #include "glinclude.h"
-#include "..\math\vector.h"
-#include "..\math\matrix.h"
+#include "math\vector.h"
+#include "math\matrix.h"
 #include "sceneobject.h"
 #include "lighting\pointlight.h"
 

@@ -7,7 +7,7 @@
 #include "glinclude.h"
 #include "shader.h"
 
-#include "..\core\utilities\icexception.h"
+#include "core\utilities\icexception.h"
 
 namespace IceFairy {
     /*! \brief Thrown if an error occurs while creating the buffer object */

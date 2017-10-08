@@ -6,9 +6,9 @@
 #include <string>
 
 #include "../shader.h"
-#include "../../math/colour.h"
-#include "../../math/vector.h"
-#include "../../core/utilities/icexception.h"
+#include "math/colour.h"
+#include "math/vector.h"
+#include "core/utilities/icexception.h"
 
 namespace IceFairy {
     /*! \brief Thrown if the maximum number of possible active point lights has been exceeded. */
