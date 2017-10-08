@@ -2,7 +2,6 @@
 #define __ice_fairy_application_h__
 
 #include "module.h"
-#include "..\modules\modulemapper.h"
 #include "utilities\logger.h"
 
 namespace IceFairy {
@@ -37,13 +36,13 @@ namespace IceFairy {
         Application(int argc, char** argv);
         /*! \brief Destructor, overload for use of any application clean up. */
         virtual ~Application() { }
-        /*! \brief Initialises the module and any sub-modules.
-        *
-        * Instantiated versions of this class member should be used for adding top level modules
-        * and preparing any additional resources/configuration needed by the application.
-        */
-        virtual void            Initialise(void) = 0;
 
+		/*! \brief Initialises the module and any sub-modules.
+		*
+		* Instantiated versions of this class member should be used for adding top level modules
+		* and preparing any additional resources/configuration needed by the application.
+		*/
+		virtual void            Initialise(void);
         /*! \brief Returns a module with a given name.
          *
          * \param moduleName The name of the module to return.
@@ -59,12 +58,13 @@ namespace IceFairy {
         bool                    IsModuleLoaded(std::string moduleName);
 
     protected:
-        /*! \brief Loads a module with a given name into the application.
-         *
-         * \param moduleName The name of the module if it exists.
-         */
-        std::shared_ptr<Module> LoadModule(std::string moduleName);
-        /*! \brief Unloads a module with a given name from the application.
+		/*! \brief Adds a module into the application.
+		*
+		* \param module The module to add.
+		*/
+		std::shared_ptr<Module> AddModule(std::shared_ptr<Module> module);
+
+        /*! \brief Removes a module with a given name from the application.
          *
          * \param moduleName The name of the module if it exists.
          */

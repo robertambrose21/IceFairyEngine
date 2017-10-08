@@ -3,8 +3,7 @@
 using namespace IceFairy;
 
 GraphicsModule::GraphicsModule()
-    : Module(ICEFAIRY_GRAPHICS_MODULE),
-      hasErrors(false),
+    : hasErrors(false),
       windowWidth(0),
       windowHeight(0),
       window(NULL),
@@ -12,16 +11,22 @@ GraphicsModule::GraphicsModule()
       sceneTree(std::shared_ptr<SceneTree>(new SceneTree()))
 { }
 
-void GraphicsModule::Initialise(void) {
+bool GraphicsModule::Initialise(void) {
+	if (!Module::Initialise()) {
+		return false;
+	}
+
     glfwSetErrorCallback(GLFWErrorCallback);
 
     if (!glfwInit()) {
         hasErrors = true;
-        return;
+		Logger::PrintLn(Logger::LEVEL_ERROR, "\tFailed to initialise GLFW.");
+        return false;
     }
 
     GLFWVersion glfwVersion = GetGLFWVersion();
-    Logger::Print(Logger::LEVEL_INFO, "GLFW %d.%d.%d Initialised OK.", glfwVersion.major, glfwVersion.revision, glfwVersion.revision);
+    Logger::PrintLn(Logger::LEVEL_INFO, "\tGLFW %d.%d.%d Initialised OK.", glfwVersion.major, glfwVersion.revision, glfwVersion.revision);
+	return true;
 }
 
 void GraphicsModule::StartMainLoop(void) {
@@ -30,7 +35,7 @@ void GraphicsModule::StartMainLoop(void) {
     }
 
     if (drawables.empty()) {
-        Logger::Print(Logger::LEVEL_DEBUG, "No drawables have been created!");
+        Logger::PrintLn(Logger::LEVEL_DEBUG, "No drawables have been created!");
     }
 
     screenQuad = CreateScreenQuad();
@@ -138,7 +143,7 @@ void GraphicsModule::CreateWindow(unsigned int windowWidth, unsigned int windowH
 
 void GraphicsModule::InitialiseGlew(void) {
     if (GLenum glewOK = glewInit() != GLEW_OK) {
-        Logger::Print(Logger::LEVEL_CRITICAL, "glew failed to initialise: %s", glewGetErrorString(glewOK));
+        Logger::PrintLn(Logger::LEVEL_CRITICAL, "glew failed to initialise: %s", glewGetErrorString(glewOK));
         hasErrors = true;
 
         throw GLEWInitialisationFailureException();
@@ -185,6 +190,10 @@ const char* GraphicsModule::GetWindowTitle(void) const {
     return title;
 }
 
+std::string GraphicsModule::GetName(void) const {
+	return "GraphicsModule";
+}
+
 bool GraphicsModule::IsWindowCreated(void) {
     return window != NULL;
 }
@@ -208,5 +217,5 @@ GraphicsModule::GLFWVersion GraphicsModule::GetGLFWVersion(void) {
 }
 
 void GraphicsModule::GLFWErrorCallback(int error, const char* description) {
-    Logger::Print(Logger::LEVEL_ERROR, "A GLFW error has occurred: [%d] %s", error, description);
+    Logger::PrintLn(Logger::LEVEL_ERROR, "A GLFW error has occurred: [%d] %s", error, description);
 }

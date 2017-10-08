@@ -7,21 +7,45 @@ Application::Application(int argc, char** argv)
       argv(argv)
 { }
 
-std::shared_ptr<Module> Application::LoadModule(std::string moduleName) {
-    try {
-        auto module = ModuleMapper::CreateModule(moduleName);
-        module->Initialise();
+void Application::Initialise() {
+	const char* logo =
+		"_\\ /_        ______   _                \n"
+		" /_\\         |  ___| (_)               \n"
+		" | | ___ ___ | |___ _ _ _ __ _   _      \n"
+		" | |/ __/ _ \\  _/ _` | | '__| | | |    \n"
+		" | | (_|  __/ || (_| | | |  | |_| |     \n"
+		" |_|\\___\\___\\_| \\__,_|_|_|   \\__, |\n"
+		"                              __/ |     \n"
+		"                             |___/      \n\n"
+		"___________________________________\n";
 
-        modules[moduleName] = module;
+	Logger::Print(logo);
+	Logger::PrintLn(Logger::LEVEL_INFO, "Loading Modules...");
 
-        Logger::Print(Logger::LEVEL_INFO, "[%s] module loaded.", moduleName.c_str());
+	unsigned int numModulesLoaded = 0;
+	for (auto& module : modules) {
+		Logger::PrintLn(Logger::LEVEL_INFO, "[%s] Loading...", module.first.c_str());
+		if (module.second->Initialise()) {
+			Logger::PrintLn(Logger::LEVEL_INFO, "[%s] OK.", module.first.c_str());
+			numModulesLoaded++;
+		}
+		else {
+			Logger::PrintLn(Logger::LEVEL_ERROR, "[%s] FAILED.", module.first.c_str());
+		}
+	}
+	Logger::PrintLn(Logger::LEVEL_INFO, "%d/%d modules loaded.", numModulesLoaded, modules.size());
+	Logger::PrintLn(Logger::LEVEL_INFO, "Starting...");
+}
 
-        return module;
-    }
-    catch (NoSuchModuleException& e) {
-        Logger::Print(Logger::LEVEL_ERROR, "[%s] module could not be loaded: %s", moduleName.c_str(), e.what());
-        return nullptr;
-    }
+std::shared_ptr<Module> Application::AddModule(std::shared_ptr<Module> module) {
+	try {
+		modules[module->GetName()] = module;
+		return module;
+	}
+	catch (NoSuchModuleException& e) {
+		Logger::PrintLn(Logger::LEVEL_ERROR, "[%s] module could not be loaded: %s", module->GetName().c_str(), e.what());
+		return nullptr;
+	}
 }
 
 std::shared_ptr<Module> Application::GetModule(std::string moduleName) {
@@ -40,7 +64,7 @@ bool Application::IsModuleLoaded(std::string moduleName) {
 void Application::UnloadModule(std::string moduleName) {
     if (IsModuleLoaded(moduleName)) {
         modules.erase(moduleName);
-        Logger::Print(Logger::LEVEL_WARNING, "[%s] module unloaded.", moduleName.c_str());
+        Logger::PrintLn(Logger::LEVEL_INFO, "[%s] module unloaded.", moduleName.c_str());
     }
 }
 

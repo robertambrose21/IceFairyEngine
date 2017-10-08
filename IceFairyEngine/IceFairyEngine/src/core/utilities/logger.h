@@ -13,7 +13,7 @@
 
 #include "icexception.h"
 
-#define ICEFAIRY_LOGGER_DEFAULT_CHAR_LENGTH 255
+#define ICEFAIRY_LOGGER_DEFAULT_CHAR_LENGTH 1024
 /*! \internal */
 #define ICEFAIRY_LOGGER_PRINT_LEN(fmt, len) {       \
     if(!IsLoggingEnabled())                         \
@@ -235,7 +235,7 @@ namespace IceFairy {
          */
         static void PrintL(const std::string& fmt, unsigned int bufferSize, ...);
 
-        /*! \brief Prints to the current log stream with a given log level and timestamp. <tt>const char*</tt> variant
+        /*! \brief Prints to the current log stream with a given log level and timestamp and a new line. <tt>const char*</tt> variant
         *
         * Prints to the current log stream using \c printf notation.\n
         * The default maximum length for the print buffer is defined by \ref ICEFAIRY_LOGGER_DEFAULT_CHAR_LENGTH.\n
@@ -251,9 +251,27 @@ namespace IceFairy {
         * \throws PrintBufferTooSmallException
         * \throws InvalidLogStreamException
         */
-        static void Print(unsigned int logLevel, const char* fmt, ...);
+        static void PrintLn(unsigned int logLevel, const char* fmt, ...);
 
-        /*! \brief Prints to the current log stream with a given log level and timestamp. \c std::string variant
+		/*! \brief Prints to the current log stream with a given log level and timestamp. <tt>const char*</tt> variant
+		*
+		* Prints to the current log stream using \c printf notation.\n
+		* The default maximum length for the print buffer is defined by \ref ICEFAIRY_LOGGER_DEFAULT_CHAR_LENGTH.\n
+		* If you require a larger print buffer please refer to the other Print functions.
+		* \note This function adds a newline at the end of the stream.
+		*
+		* \code{.cpp}
+		* IceFairy::Logger:Print(IceFairy::Logger::INFO, "%s\n", "This is a message with some info");
+		* \endcode
+		* \param level The level to log this message at. See \ref Level.
+		* \param fmt The format of the string to print.
+		* \param ... The arguments for the formatted string to print.
+		* \throws PrintBufferTooSmallException
+		* \throws InvalidLogStreamException
+		*/
+		static void Print(unsigned int logLevel, const char* fmt, ...);
+
+        /*! \brief Prints to the current log stream with a given log level and timestamp and a new line. \c std::string variant
          *
          * Prints to the current log stream using \c printf notation.\n
          * The default maximum length for the print buffer is defined by \ref ICEFAIRY_LOGGER_DEFAULT_CHAR_LENGTH.\n
@@ -269,7 +287,25 @@ namespace IceFairy {
          * \throws PrintBufferTooSmallException
          * \throws InvalidLogStreamException
          */
-        static void Print(unsigned int logLevel, std::string fmt, ...);
+        static void PrintLn(unsigned int logLevel, std::string fmt, ...);
+
+		/*! \brief Prints to the current log stream with a given log level and timestamp. \c std::string variant
+		*
+		* Prints to the current log stream using \c printf notation.\n
+		* The default maximum length for the print buffer is defined by \ref ICEFAIRY_LOGGER_DEFAULT_CHAR_LENGTH.\n
+		* If you require a larger print buffer please refer to the other Print functions.
+		* \note This function adds a newline at the end of the stream.
+		*
+		* \code{.cpp}
+		* IceFairy::Logger:Print(IceFairy::Logger::INFO, "%s\n", "This is a message with some info");
+		* \endcode
+		* \param level The level to log this message at. See \ref Level.
+		* \param fmt The format of the string to print.
+		* \param ... The arguments for the formatted string to print.
+		* \throws PrintBufferTooSmallException
+		* \throws InvalidLogStreamException
+		*/
+		static void Print(unsigned int logLevel, std::string fmt, ...);
 
         /*! \brief Prints to the current log stream with a given log level and timestamp in HTML format. <tt>const char*</tt> variant
          *

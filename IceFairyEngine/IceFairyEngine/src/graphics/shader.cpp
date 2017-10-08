@@ -223,7 +223,7 @@ void Shader::CheckForErrors(GLuint shaderID, GLenum shaderType) {
         GLchar* strInfoLog = new GLchar[infoLogLength + 1];
         glGetShaderInfoLog(shaderID, infoLogLength, NULL, strInfoLog);
 
-        Logger::Print(Logger::LEVEL_ERROR, "Compilation error in shader \'%s\': %s\n",
+        Logger::PrintLn(Logger::LEVEL_ERROR, "Compilation error in shader \'%s\': %s\n",
             shaderType == GL_VERTEX_SHADER ? VERTEX_SHADER_NAME : FRAGMENT_SHADER_NAME, strInfoLog);
 
         delete[] strInfoLog;

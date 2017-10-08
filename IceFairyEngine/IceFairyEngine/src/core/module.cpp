@@ -1,27 +1,34 @@
 #include "module.h"
-#include "..\modules\modulemapper.h"
 
 using namespace IceFairy;
 
-Module::Module(std::string name)
-    : name(name)
+Module::Module()
 { }
 
+bool Module::Initialise(void) {
+	for (auto& module : subModules) {
+		if (!module.second->Initialise()) {
+			Logger::PrintLn(Logger::LEVEL_ERROR, "\tSubModule [%s] FAILED.", module.first.c_str());
+			return false;
+		}
+	}
+
+	return true;
+}
+
+std::shared_ptr<Module> Module::AddSubModule(std::shared_ptr<Module> module) {
+	try {
+		subModules[module->GetName()] = module;
+		return module;
+	}
+	catch (NoSuchModuleException& e) {
+		Logger::PrintLn(Logger::LEVEL_ERROR, "\t[%s] module could not be loaded: %s", module->GetName().c_str(), e.what());
+		return nullptr;
+	}
+}
+
 std::string Module::GetName(void) const {
-    return name;
-}
-
-void Module::AddSubModule(std::string subModuleName) {
-    auto module = CreateSubModule(subModuleName);
-    module->Initialise();
-
-    subModules[subModuleName] = module;
-
-    Logger::Print(Logger::LEVEL_INFO, "[%s] submodule loaded for %s.", subModuleName.c_str(), GetName().c_str());
-}
-
-std::shared_ptr<Module> Module::CreateSubModule(std::string subModuleName) {
-    return ModuleMapper::CreateModule(subModuleName);
+	return "No Module name defined - Implement \"GetName()\" in your module.";
 }
 
 std::string Module::ListSubModules(void) {

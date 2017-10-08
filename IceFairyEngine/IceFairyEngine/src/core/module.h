@@ -51,8 +51,8 @@ namespace IceFairy {
         /*! \brief STL map of Module pointers. */
         typedef std::map<std::string, std::shared_ptr<Module>> ModuleMap;
 
-        /*! \brief Constructor, takes the Module's name. */
-        Module(std::string name);
+        /*! \brief Constructor, create the module */
+        Module();
         /*! \brief Destructor, overload for use of any module clean up. */
         virtual ~Module() { };
 
@@ -60,13 +60,15 @@ namespace IceFairy {
          *
          * Instantiated versions of this class member should be used for adding sub-modules
          * and preparing any resources needed for this moudle.
+		 *
+		 * \returns true if initialisation was successful
          */
-        virtual void                    Initialise(void) = 0;
+		virtual bool                    Initialise(void);
         /*! \brief Returns the name of this module.
          * 
          * \returns the name of this module.
          */
-        std::string                     GetName(void) const;
+        virtual std::string             GetName(void) const;
         /*! \brief Lists the sub-modules of this module.
          *
          * \returns a string of all sub-modules used by this module.
@@ -74,23 +76,14 @@ namespace IceFairy {
         std::string                     ListSubModules(void);
 
     protected:
-        /*! \brief Adds and initialises a sub-module to this module.
+        /*! \brief Adds a sub-module to this module.
          *
          * Adds a sub-module to this module - modules may have any layer of sub-modules.
-         * \param subModuleName The name of the sub-module to add.
+         * \param module The sub-module to add.
          */
-        void                            AddSubModule(std::string subModuleName);
-
-        /*! \brief Returns a new sub-module.
-         *
-         * Creates a new sub-module to be used by this module.
-         * \param subModuleName The name of the sub-module to add.
-         * \returns The newly created sub-module.
-         */
-        virtual std::shared_ptr<Module> CreateSubModule(std::string subModuleName);
+		std::shared_ptr<Module>			AddSubModule(std::shared_ptr<Module> module);
 
     private:
-        std::string name;
         ModuleMap   subModules;
     };
 }

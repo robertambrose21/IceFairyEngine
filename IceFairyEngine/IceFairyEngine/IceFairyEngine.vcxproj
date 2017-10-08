@@ -33,8 +33,6 @@
     <ClInclude Include="src\math\matrix.h" />
     <ClInclude Include="src\math\vector.h" />
     <ClInclude Include="src\modules\graphicsmodule.h" />
-    <ClInclude Include="src\modules\modulemapper.h" />
-    <ClInclude Include="src\modules\modulenames.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\application.cpp" />
@@ -55,7 +53,6 @@
     <ClCompile Include="src\graphics\stbi\stb_image.c" />
     <ClCompile Include="src\graphics\vertexobject.cpp" />
     <ClCompile Include="src\modules\graphicsmodule.cpp" />
-    <ClCompile Include="src\modules\modulemapper.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{CCE31805-A8A6-4597-93E3-8D507FDA8025}</ProjectGuid>

@@ -79,14 +79,14 @@ TEST_F(LoggerTest, LogLevel) {
 
     std::string tt = IceFairy::Logger::GetTimestamp();
 
-    IceFairy::Logger::Print(IceFairy::Logger::LEVEL_INFO, "%s\n", "Some information");
+    IceFairy::Logger::PrintLn(IceFairy::Logger::LEVEL_INFO, "%s\n", "Some information");
     EXPECT_NE(std::string::npos, GetLogStream().str().find(infoStr));
 
     ClearStream();
 
     IceFairy::Logger::SetLogLevel(IceFairy::Logger::LEVEL_WARNING);
-    IceFairy::Logger::Print(IceFairy::Logger::LEVEL_INFO, "%s\n", "Some more information");
-    IceFairy::Logger::Print(IceFairy::Logger::LEVEL_WARNING, "%s\n", "A warning");
+    IceFairy::Logger::PrintLn(IceFairy::Logger::LEVEL_INFO, "%s\n", "Some more information");
+    IceFairy::Logger::PrintLn(IceFairy::Logger::LEVEL_WARNING, "%s\n", "A warning");
 
     EXPECT_EQ(std::string::npos, GetLogStream().str().find(infoStr));
     EXPECT_NE(std::string::npos, GetLogStream().str().find(warningStr));

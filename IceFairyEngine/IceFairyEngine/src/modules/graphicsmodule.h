@@ -12,7 +12,6 @@
 #include "../graphics/shader.h"
 #include "../graphics/scenetree.h"
 #include "../graphics/bufferobject.h"
-#include "modulenames.h"
 
 namespace IceFairy {
     /*! \brief Thrown if the main shader has not been set */
@@ -83,7 +82,7 @@ namespace IceFairy {
         virtual ~GraphicsModule() { }
 
         /*! \brief Initialises OpenGL */
-        void                        Initialise(void);
+        bool                        Initialise(void);
         /*! \brief Begins the main graphics loop, executing any drawables present
          *
          * \throws ColourShaderNotSetException
@@ -136,7 +135,13 @@ namespace IceFairy {
         /*! \returns The \ref SceneTree in use by this GraphicsModule */
         std::shared_ptr<SceneTree>  GetSceneTree(void);
 
-    protected:
+		/*! \brief Returns the name of this module.
+		*
+		* \returns the name of this module.
+		*/
+		std::string					GetName(void) const;
+
+	private:
         typedef struct _GLFWVersion {
             int major;
             int minor;
@@ -157,17 +162,17 @@ namespace IceFairy {
 
         void                        DrawBuffersToScreen(std::map<std::string, GLuint>& bufferData);
 
-        GLFWwindow*                     window;
-        unsigned int                    windowWidth;
-        unsigned int                    windowHeight;
-        const char*                     title;
-        bool                            hasErrors;
+        GLFWwindow*                 window;
+        unsigned int                windowWidth;
+        unsigned int                windowHeight;
+        const char*                 title;
+        bool                        hasErrors;
 
-        std::shared_ptr<SceneTree>      sceneTree;
-        DrawablesList                   drawables;
-        Shader                          mainShader;
+        std::shared_ptr<SceneTree>  sceneTree;
+        DrawablesList               drawables;
+        Shader                      mainShader;
 
-        VertexObject                    screenQuad;
+        VertexObject                screenQuad;
     };
 }
 

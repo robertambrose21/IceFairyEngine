@@ -133,7 +133,7 @@ void Logger::PrintL(const std::string& fmt, unsigned int bufferSize, ...) {
     ICEFAIRY_LOGGER_PRINT_LEN(fmt_cstr, bufferSize);
 }
 
-void Logger::Print(unsigned int logLevel, const char* fmt, ...) {
+void Logger::PrintLn(unsigned int logLevel, const char* fmt, ...) {
     if (logLevel >= GetLogLevel()) {
         Print("[%s] %s: ", GetLogLevelText(logLevel).c_str(), GetTimestamp().c_str());
         ICEFAIRY_LOGGER_PRINT(fmt);
@@ -141,13 +141,30 @@ void Logger::Print(unsigned int logLevel, const char* fmt, ...) {
     }
 }
 
-void Logger::Print(unsigned int logLevel, std::string fmt, ...) {
+void Logger::Print(unsigned int logLevel, const char* fmt, ...) {
+	if (logLevel >= GetLogLevel()) {
+		Print("[%s] %s: ", GetLogLevelText(logLevel).c_str(), GetTimestamp().c_str());
+		ICEFAIRY_LOGGER_PRINT(fmt);
+		Print("\n");
+	}
+}
+
+void Logger::PrintLn(unsigned int logLevel, std::string fmt, ...) {
     if (logLevel >= GetLogLevel()) {
         Print("[%s] %s: ", GetLogLevelText(logLevel).c_str(), GetTimestamp().c_str());
         const char* fmt_cstr = fmt.c_str();
         ICEFAIRY_LOGGER_PRINT(fmt_cstr);
         Print("\n");
     }
+}
+
+void Logger::Print(unsigned int logLevel, std::string fmt, ...) {
+	if (logLevel >= GetLogLevel()) {
+		Print("[%s] %s: ", GetLogLevelText(logLevel).c_str(), GetTimestamp().c_str());
+		const char* fmt_cstr = fmt.c_str();
+		ICEFAIRY_LOGGER_PRINT(fmt_cstr);
+		Print("\n");
+	}
 }
 
 void Logger::PrintHTML(unsigned int level, const char* fmt, ...) {

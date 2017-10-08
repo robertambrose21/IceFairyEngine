@@ -1,0 +1,14 @@
+Dependencies/
+Debug/
+Release/
+IceFairyEngine/Game/
+IceFairyEngine/.vs/
+IceFairyEngine/IceFairyEngine.VC.db
+Documentation/html
+*.props
+*.filters
+*.sdf
+*.opensdf
+*.png
+*.sln
+*.diff
