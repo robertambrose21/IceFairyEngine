@@ -13,8 +13,6 @@
 #include "scenetree.h"
 #include "bufferobject.h"
 
-// TODO: New project!
-
 namespace IceFairy {
     /*! \brief Thrown if the main shader has not been set */
     class MainShaderNotSetException : public ICException {
