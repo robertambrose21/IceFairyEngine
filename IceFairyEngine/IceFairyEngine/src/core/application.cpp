@@ -37,17 +37,6 @@ void Application::Initialise() {
 	Logger::PrintLn(Logger::LEVEL_INFO, "Starting...");
 }
 
-std::shared_ptr<Module> Application::AddModule(std::shared_ptr<Module> module) {
-	try {
-		modules[module->GetName()] = module;
-		return module;
-	}
-	catch (NoSuchModuleException& e) {
-		Logger::PrintLn(Logger::LEVEL_ERROR, "[%s] module could not be loaded: %s", module->GetName().c_str(), e.what());
-		return nullptr;
-	}
-}
-
 std::shared_ptr<Module> Application::GetModule(std::string moduleName) {
     if (IsModuleLoaded(moduleName)) {
         return modules[moduleName];

@@ -58,11 +58,20 @@ namespace IceFairy {
         bool                    IsModuleLoaded(std::string moduleName);
 
     protected:
-		/*! \brief Adds a module into the application.
-		*
-		* \param module The module to add.
-		*/
-		std::shared_ptr<Module> AddModule(std::shared_ptr<Module> module);
+		/*! \brief Adds a module into the application. */
+		template<class T>
+		std::shared_ptr<T> AddModule(const std::string& name) {
+			auto module = std::shared_ptr<T>(new T(name));
+
+			try {
+				modules[module->GetName()] = module;
+				return module;
+			}
+			catch (NoSuchModuleException& e) {
+				Logger::PrintLn(Logger::LEVEL_ERROR, "[%s] module could not be loaded: %s", module->GetName().c_str(), e.what());
+				return nullptr;
+			}
+		}
 
         /*! \brief Removes a module with a given name from the application.
          *

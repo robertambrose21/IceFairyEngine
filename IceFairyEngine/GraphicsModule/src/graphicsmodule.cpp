@@ -2,8 +2,9 @@
 
 using namespace IceFairy;
 
-GraphicsModule::GraphicsModule()
-    : hasErrors(false),
+GraphicsModule::GraphicsModule(const std::string& name)
+    : Module(name),
+	  hasErrors(false),
       windowWidth(0),
       windowHeight(0),
       window(NULL),
@@ -188,10 +189,6 @@ float GraphicsModule::GetAspectRatio(void) {
 
 const char* GraphicsModule::GetWindowTitle(void) const {
     return title;
-}
-
-std::string GraphicsModule::GetName(void) const {
-	return "GraphicsModule";
 }
 
 bool GraphicsModule::IsWindowCreated(void) {

@@ -77,7 +77,7 @@ namespace IceFairy {
     class GraphicsModule : public Module {
     public:
         /*! \brief Constructor. */
-        GraphicsModule();
+        GraphicsModule(const std::string& name);
         /*! \brief Destructor. */
         virtual ~GraphicsModule() { }
 
@@ -134,12 +134,6 @@ namespace IceFairy {
         
         /*! \returns The \ref SceneTree in use by this GraphicsModule */
         std::shared_ptr<SceneTree>  GetSceneTree(void);
-
-		/*! \brief Returns the name of this module.
-		*
-		* \returns the name of this module.
-		*/
-		std::string					GetName(void) const;
 
 	private:
         typedef struct _GLFWVersion {

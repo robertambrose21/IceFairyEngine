@@ -2,7 +2,14 @@
 
 using namespace IceFairy;
 
+const std::string DEFAULT_MODULE_WARNING_NAME = "No Module name defined - Implement \"GetName()\" in your module.";
+
 Module::Module()
+	: name(DEFAULT_MODULE_WARNING_NAME)
+{ }
+
+Module::Module(const std::string& name)
+	: name(name)
 { }
 
 bool Module::Initialise(void) {
@@ -16,19 +23,8 @@ bool Module::Initialise(void) {
 	return true;
 }
 
-std::shared_ptr<Module> Module::AddSubModule(std::shared_ptr<Module> module) {
-	try {
-		subModules[module->GetName()] = module;
-		return module;
-	}
-	catch (NoSuchModuleException& e) {
-		Logger::PrintLn(Logger::LEVEL_ERROR, "\t[%s] module could not be loaded: %s", module->GetName().c_str(), e.what());
-		return nullptr;
-	}
-}
-
 std::string Module::GetName(void) const {
-	return "No Module name defined - Implement \"GetName()\" in your module.";
+	return name;
 }
 
 std::string Module::ListSubModules(void) {

@@ -53,6 +53,11 @@ namespace IceFairy {
 
         /*! \brief Constructor, create the module */
         Module();
+		/*! \brief Constructor, create the module
+		 *
+		 * \param name The name of the module
+		 */
+		Module(const std::string& name);
         /*! \brief Destructor, overload for use of any module clean up. */
         virtual ~Module() { };
 
@@ -68,12 +73,12 @@ namespace IceFairy {
          * 
          * \returns the name of this module.
          */
-        virtual std::string             GetName(void) const;
+        std::string             GetName(void) const;
         /*! \brief Lists the sub-modules of this module.
          *
          * \returns a string of all sub-modules used by this module.
          */
-        std::string                     ListSubModules(void);
+        std::string             ListSubModules(void);
 
     protected:
         /*! \brief Adds a sub-module to this module.
@@ -81,10 +86,23 @@ namespace IceFairy {
          * Adds a sub-module to this module - modules may have any layer of sub-modules.
          * \param module The sub-module to add.
          */
-		std::shared_ptr<Module>			AddSubModule(std::shared_ptr<Module> module);
+		template<class T>
+		std::shared_ptr<T> AddSubModule(const std::string& name) {
+			auto module = std::shared_ptr<T>(new T(name));
+
+			try {
+				subModules[module->GetName()] = module;
+				return module;
+			}
+			catch (NoSuchModuleException& e) {
+				Logger::PrintLn(Logger::LEVEL_ERROR, "[%s] sub-module could not be loaded: %s", module->GetName().c_str(), e.what());
+				return nullptr;
+			}
+		}
 
     private:
         ModuleMap   subModules;
+		std::string	name;
     };
 }
 
