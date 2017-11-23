@@ -41,6 +41,11 @@ namespace IceFairy {
               y(0)
         { }
 
+		Vector2(T xy)
+			: x(xy),
+			  y(xy)
+		{ }
+
         Vector2(T x, T y)
             : x(x),
               y(y)
@@ -74,6 +79,16 @@ namespace IceFairy {
         Vector2 operator*(const T scale) const {
             return Vector2(x * scale, y * scale);
         }
+
+		Vector2 operator*(const Vector2& other) const {
+			return Vector2(x * other.x, y * other.y);
+		}
+
+		Vector2 operator*=(const Vector2& other) const {
+			x *= other.x;
+			y *= other.y;
+			return *this;
+		}
 
         Vector2 operator/(const T scale) const {
             return Vector2(x / scale, y / scale);
@@ -215,6 +230,12 @@ namespace IceFairy {
               z(0)
         { }
 
+		Vector3(T xyz)
+			: x(xyz),
+			  y(xyz),
+			  z(xyz)
+		{ }
+
         Vector3(T x, T y, T z)
             : x(x),
               y(y),
@@ -260,6 +281,17 @@ namespace IceFairy {
         Vector3 operator*(const T scale) const {
             return Vector3(x * scale, y * scale, z * scale);
         }
+
+		Vector3 operator*(const Vector3& other) const {
+			return Vector3(x * other.x, y * other.y, z * other.z);
+		}
+
+		Vector3 operator*=(const Vector3& other) const {
+			x *= other.x;
+			y *= other.y;
+			z *= other.z;
+			return *this;
+		}
                 
         Vector3 operator/(const T scale) const {
             return Vector3(x / scale, y / scale, z / scale);
@@ -414,6 +446,13 @@ namespace IceFairy {
               w(0)
         { }
 
+		Vector4(T xyzw)
+			: x(xyzw),
+			  y(xyzw),
+			  z(xyzw),
+			  w(xyzw)
+		{ }
+
         Vector4(T x, T y, T z, T w)
             : x(x),
               y(y),
@@ -469,6 +508,11 @@ namespace IceFairy {
         return Vector3<T>(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z);
     }
 
+	template <class T>
+	Vector3<T> operator*(const Vector3<T>& lhs, const Vector3<T>& rhs) {
+		return Vector3<T>(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z);
+	}
+
     template <class T>
     Vector2<T> operator+(const Vector2<T>& lhs, const Vector2<T>& rhs) {
         return Vector2<T>(lhs.x + rhs.x, lhs.y + rhs.y);
@@ -478,6 +522,11 @@ namespace IceFairy {
     Vector2<T> operator-(const Vector2<T>& lhs, const Vector2<T>& rhs) {
         return Vector2<T>(lhs.x - rhs.x, lhs.y - rhs.y);
     }
+
+	template <class T>
+	Vector2<T> operator*(const Vector2<T>& lhs, const Vector2<T>& rhs) {
+		return Vector2<T>(lhs.x * rhs.x, lhs.y * rhs.y);
+	}
 
     // 3-space ray.
     // 3 dimensional ray for ray casting operations.
