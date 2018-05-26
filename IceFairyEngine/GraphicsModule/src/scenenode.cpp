@@ -86,8 +86,8 @@ void _SceneNode::ApplyZRotation(const float& degrees) {
     ApplyTransformationMatrix(Matrix4f::Rotate(degrees, 0, 0, 1));
 }
 
-void _SceneNode::ApplyTransformationMatrix(const Matrix4f& transformationMatrix, bool updateRealPositions) {
-    relativeTransformationMatrix = relativeTransformationMatrix * transformationMatrix;
+void _SceneNode::ApplyTransformationMatrix(const Matrix4f& matrix, bool updateRealPositions) {
+    relativeTransformationMatrix = relativeTransformationMatrix * matrix;
     relativePosition = (relativeTransformationMatrix * Vector4f(0.0f, 0.0f, 0.0f, 1.0f)).ToVector3();
 
     if (updateRealPositions) {
@@ -139,14 +139,14 @@ void _SceneNode::ResetMatrixState(void) {
     UpdateRealPositions();
 }
 
-void _SceneNode::SetPointLight(const std::shared_ptr<PointLight>& pointLight) {
-    this->pointLight = pointLight;
+void _SceneNode::SetPointLight(const std::shared_ptr<PointLight>& value) {
+    this->pointLight = value;
 }
 
-void _SceneNode::SetPointLight(Vector3f position, Colour3f colour, float ambient,
-    float cAttenuation, float lAttenuation, float eAttenuation)
+void _SceneNode::SetPointLight(Vector3f p, Colour3f c, float a,  float cAtt, float lAtt, float eAtt)
 {
-    SetPointLight(std::shared_ptr<PointLight>(new PointLight(position, colour, ambient, cAttenuation, lAttenuation, eAttenuation)));
+    //SetPointLight(std::shared_ptr<PointLight>(new PointLight(p, c, a, cAtt, lAtt, eAtt)));
+	SetPointLight(std::make_shared<PointLight>(p, c, a, cAtt, lAtt, eAtt));
 }
 
 void _SceneNode::UnsetPointLight(void) {

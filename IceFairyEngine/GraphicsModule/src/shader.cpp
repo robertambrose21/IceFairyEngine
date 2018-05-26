@@ -144,12 +144,12 @@ void Shader::SetUniformMatrixfv(std::string name, const Matrix4f& matrix) {
     SetUniformMatrixfv(name.c_str(), matrix);
 }
 
-void Shader::SetModelMatrixName(const std::string& modelMatrixName) {
-    this->modelMatrixName = modelMatrixName;
+void Shader::SetModelMatrixName(const std::string& value) {
+    this->modelMatrixName = value;
 }
 
-void Shader::SetViewProjectionMatrixName(const std::string& viewProjectionMatrixName) {
-    this->viewProjectionMatrixName = viewProjectionMatrixName;
+void Shader::SetViewProjectionMatrixName(const std::string& value) {
+    this->viewProjectionMatrixName = value;
 }
 
 void Shader::SetModelMatrix(const Matrix4f& matrix) {

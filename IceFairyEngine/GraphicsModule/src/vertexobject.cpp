@@ -94,15 +94,15 @@ void _VertexObject::BuildVertices(const std::vector<Vertex>& vertices) {
 	}
 }
 
-void _VertexObject::BuildIndices(unsigned int* indices, unsigned int numIndices) {
+void _VertexObject::BuildIndices(unsigned int* indices, unsigned int numIndicesValue) {
 	glDeleteBuffers(1, &ibo);
 
-    this->numIndices = numIndices;
+    this->numIndices = numIndicesValue;
 
-	if (numIndices != 0) {
+	if (this->numIndices != 0) {
 		glGenBuffers(1, &ibo);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * numIndices, indices, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * this->numIndices, indices, GL_STATIC_DRAW);
 	}
 }
 

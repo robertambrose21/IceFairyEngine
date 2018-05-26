@@ -105,9 +105,9 @@ void BufferObject::DrawInBuffer(unsigned int drawWidth, unsigned int drawHeight)
         glViewport(0, 0, drawWidth, drawHeight);
 }
 
-void BufferObject::RecreateBuffer(unsigned int width, unsigned int height) {
-    SetWidth(width);
-    SetHeight(height);
+void BufferObject::RecreateBuffer(unsigned int w, unsigned int h) {
+    SetWidth(w);
+    SetHeight(h);
 
     if (framebufferTextureID != 0)
         glDeleteTextures(1, &framebufferTextureID);
@@ -147,12 +147,12 @@ void BufferObject::CheckFrameBufferStatus(void) {
     }
 }
 
-void BufferObject::SetWidth(const unsigned int& width) {
-    this->width = width;
+void BufferObject::SetWidth(const unsigned int& value) {
+    this->width = value;
 }
 
-void BufferObject::SetHeight(const unsigned int& height) {
-    this->height = height;
+void BufferObject::SetHeight(const unsigned int& value) {
+    this->height = value;
 }
 
 BufferObject::Type BufferObject::GetType(void) const {

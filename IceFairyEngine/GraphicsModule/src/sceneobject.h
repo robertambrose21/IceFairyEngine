@@ -50,7 +50,6 @@ namespace IceFairy {
     protected:
         Material		material;
         VertexObject    vertexObject;
-        Shader          shader;
     };
 
     typedef std::shared_ptr<_SceneObject> SceneObject;

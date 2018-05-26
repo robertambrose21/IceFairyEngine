@@ -97,8 +97,8 @@ std::shared_ptr<Material::Builder> Material::Builder::withSpecular(const Colour4
 	return shared_from_this();
 }
 
-std::shared_ptr<Material::Builder> Material::Builder::withSpecularIntensity(const float& intensity, const std::string& hook) {
-	this->intensity = intensity;
+std::shared_ptr<Material::Builder> Material::Builder::withSpecularIntensity(const float& i, const std::string& hook) {
+	this->intensity = i;
 	this->intensityShaderHook = hook;
 	return shared_from_this();
 }

@@ -112,18 +112,18 @@ void GraphicsModule::AddDrawable(std::shared_ptr<Drawable> drawable) {
     drawables.push_back(drawable);
 }
 
-void GraphicsModule::AddDrawables(DrawablesList drawables) {
-    this->drawables.insert(this->drawables.end(), drawables.begin(), drawables.end());
+void GraphicsModule::AddDrawables(DrawablesList value) {
+    this->drawables.insert(this->drawables.end(), value.begin(), value.end());
 }
 
-void GraphicsModule::CreateWindow(unsigned int windowWidth, unsigned int windowHeight, const char* title, Colour3f backgroundColour) {
+void GraphicsModule::CreateWindow(unsigned int ww, unsigned int wh, const char* winTitle, Colour3f backgroundColour) {
     if (!IsWindowCreated()) {
-        this->window = CreateGLFWwindow(windowWidth, windowHeight, title, NULL, NULL);
+        this->window = CreateGLFWwindow(ww, wh, winTitle, NULL, NULL);
 
         if (IsWindowCreated()) {
-            this->windowWidth = windowWidth;
-            this->windowHeight = windowHeight;
-            this->title = title;
+            this->windowWidth = ww;
+            this->windowHeight = wh;
+            this->title = winTitle;
 
             glfwMakeContextCurrent(window);
 
@@ -159,8 +159,8 @@ void GraphicsModule::EnableGLFlags(void) {
     glClearDepth(1.0f);
 }
 
-void GraphicsModule::SetMainShader(const Shader& mainShader) {
-    this->mainShader = mainShader;
+void GraphicsModule::SetMainShader(const Shader& value) {
+    this->mainShader = value;
 }
 
 Shader GraphicsModule::GetMainShader(void) {
@@ -199,8 +199,9 @@ bool GraphicsModule::ShouldCloseLoop(void) {
     return glfwWindowShouldClose(window) || hasErrors;
 }
 
-GLFWwindow* GraphicsModule::CreateGLFWwindow(int width, int height, const char* title, GLFWmonitor* monitor, GLFWwindow* share) {
-    return glfwCreateWindow(width, height, title, monitor, share);
+// TODO: Why the fuck is this a method
+GLFWwindow* GraphicsModule::CreateGLFWwindow(int width, int height, const char* winTitle, GLFWmonitor* monitor, GLFWwindow* share) {
+    return glfwCreateWindow(width, height, winTitle, monitor, share);
 }
 
 void GraphicsModule::TerminateGLFW(void) {

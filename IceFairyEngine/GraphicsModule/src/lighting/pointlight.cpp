@@ -16,48 +16,48 @@ Vector3f PointLight::GetPosition(void) const {
     return position;
 }
 
-void PointLight::SetPosition(const Vector3f& position) {
-    this->position = position;
+void PointLight::SetPosition(const Vector3f& value) {
+    this->position = value;
 }
 
 Colour3f PointLight::GetColour(void) const {
     return colour;
 }
 
-void PointLight::SetColour(const Colour3f& colour) {
-    this->colour = colour;
+void PointLight::SetColour(const Colour3f& value) {
+    this->colour = value;
 }
 
 float PointLight::GetAmbient(void) const {
     return ambient;
 }
 
-void PointLight::SetAmbient(const float& ambient) {
-    this->ambient = ambient;
+void PointLight::SetAmbient(const float& value) {
+    this->ambient = value;
 }
 
 float PointLight::GetConstantAttentuation(void) const {
     return cAttenuation;
 }
 
-void PointLight::SetConstantAttentuation(const float& cAttenuation) {
-    this->cAttenuation = cAttenuation;
+void PointLight::SetConstantAttentuation(const float& value) {
+    this->cAttenuation = value;
 }
 
 float PointLight::GetLinearAttentuation(void) const {
     return lAttenuation;
 }
 
-void PointLight::SetLinearAttentuation(const float& lAttenuation) {
-    this->lAttenuation = lAttenuation;
+void PointLight::SetLinearAttentuation(const float& value) {
+    this->lAttenuation = value;
 }
 
 float PointLight::GetExponentialAttentuation(void) const {
     return eAttenuation;
 }
 
-void PointLight::SetExponentialAttentuation(const float& eAttenuation) {
-    this->eAttenuation = eAttenuation;
+void PointLight::SetExponentialAttentuation(const float& value) {
+    this->eAttenuation = value;
 }
 
 void PointLight::Draw(Shader shader, const unsigned int& index, const Vector3f& offset) {

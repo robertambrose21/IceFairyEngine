@@ -10,6 +10,8 @@
 #include "vector.h"
 #include "../core/utilities/icexception.h"
 
+// TODO: Move to a separate github and use glm instead (makes sense right?)
+
 namespace IceFairy {
     class MatrixNoInverseExistsException : public ICException {
     public:

@@ -21,12 +21,12 @@ std::string Logger::GetTimestamp(void) {
     return ss.str();
 }
 
-void Logger::EnableLogging(bool loggingEnabled) {
-    GetInstance()._EnableLogging(loggingEnabled);
+void Logger::EnableLogging(bool value) {
+    GetInstance()._EnableLogging(value);
 }
 
-void Logger::_EnableLogging(bool loggingEnabled) {
-    this->loggingEnabled = loggingEnabled;
+void Logger::_EnableLogging(bool value) {
+    this->loggingEnabled = value;
 }
 
 bool Logger::IsLoggingEnabled(void)  {
@@ -73,8 +73,8 @@ void Logger::SetLogLevel(unsigned int logLevel) {
     Logger::GetInstance()._SetLogLevel(logLevel);
 }
 
-void Logger::_SetLogLevel(unsigned int logLevel) {
-    this->logLevel = logLevel;
+void Logger::_SetLogLevel(unsigned int value) {
+    this->logLevel = value;
 }
 
 std::string Logger::GetLogLevelText(unsigned int level) {
@@ -102,17 +102,17 @@ void Logger::SetHTMLTags(const std::string& htmlOpenTag, const std::string& html
     Logger::GetInstance()._SetHTMLTags(htmlOpenTag, htmlCloseTag);
 }
 
-void Logger::_SetHTMLTags(const std::string& htmlOpenTag, const std::string& htmlCloseTag) {
-    this->htmlOpenTag = htmlOpenTag;
-    this->htmlCloseTag = htmlCloseTag;
+void Logger::_SetHTMLTags(const std::string& htmlOpenTagValue, const std::string& htmlCloseTagValue) {
+    this->htmlOpenTag = htmlOpenTagValue;
+    this->htmlCloseTag = htmlCloseTagValue;
 }
 
 void Logger::SetLogStream(std::ostream& logStream) {
     Logger::GetInstance()._SetLogStream(logStream);
 }
 
-void Logger::_SetLogStream(std::ostream& logStream) {
-    this->logStream = &logStream;
+void Logger::_SetLogStream(std::ostream& value) {
+    this->logStream = &value;
 }
 
 void Logger::Print(const char* fmt, ...) {
