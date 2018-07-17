@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "glinclude.h"
+#include "opengl/glinclude.h"
 #include "math/vector.h"
 #include "core/utilities/logger.h"
 #include "core/utilities/icexception.h"

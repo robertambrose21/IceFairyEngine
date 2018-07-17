@@ -5,13 +5,13 @@
 #include <sstream>
 #include <algorithm>
 
-#include "glinclude.h"
-#include "math\vector.h"
-#include "math\matrix.h"
-#include "math\colour.h"
-#include "core\utilities\logger.h"
-#include "core\utilities\resource.h"
-#include "core\utilities\icexception.h"
+#include "opengl/glinclude.h"
+#include "math/vector.h"
+#include "math/matrix.h"
+#include "math/colour.h"
+#include "core/utilities/logger.h"
+#include "core/utilities/resource.h"
+#include "core/utilities/icexception.h"
 
 namespace IceFairy {
     class ShaderCompilationException : public ICException {

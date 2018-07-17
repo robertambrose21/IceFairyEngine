@@ -5,7 +5,6 @@ using namespace IceFairy;
 _SceneObject::_SceneObject()
 { }
 
-// TODO: Should shader/transformation matrix really be passed in here?
 void _SceneObject::Draw(Shader shader, const Matrix4f& transformationMatrix, bool omitMaterials) {
     shader.Bind();
     shader.SetModelMatrix(transformationMatrix);

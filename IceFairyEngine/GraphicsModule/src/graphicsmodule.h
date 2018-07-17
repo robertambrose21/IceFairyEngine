@@ -3,8 +3,9 @@
 
 #include <vector>
 #include <functional>
+#include <chrono>
 
-#include "glinclude.h"
+#include "opengl/glinclude.h"
 #include "drawable.h"
 #include "core/module.h"
 #include "core/utilities/icexception.h"
@@ -104,9 +105,10 @@ namespace IceFairy {
          * \param windowHeight The height of the window
          * \param title The title of the window
          * \param backgroundColour The background colour of the window. Black by default.
+		 * \returns The window
          * \throws MultipleWindowsUnsupportedException
          */
-        void                        CreateWindow(unsigned int windowWidth, unsigned int windowHeight, const char* title,
+		GLFWwindow*					CreateWindow(unsigned int windowWidth, unsigned int windowHeight, const char* title,
                                         Colour3f backgroundColour = Colour3f(0.0f, 0.0f, 0.0f));
         /*! \brief Sets the main \ref Shader
          *
@@ -156,6 +158,8 @@ namespace IceFairy {
 
         void                        DrawBuffersToScreen(std::map<std::string, GLuint>& bufferData);
 
+		long long					GetMillisecondsSinceEpoch(void);
+
         GLFWwindow*                 window;
         unsigned int                windowWidth;
         unsigned int                windowHeight;
@@ -167,6 +171,8 @@ namespace IceFairy {
         Shader                      mainShader;
 
         VertexObject                screenQuad;
+
+		long						timeSinceLastFrame;
     };
 }
 

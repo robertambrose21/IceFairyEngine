@@ -4,7 +4,7 @@
 #include <string>
 #include <functional>
 
-#include "glinclude.h"
+#include "opengl/glinclude.h"
 #include "shader.h"
 
 #include "core\utilities\icexception.h"

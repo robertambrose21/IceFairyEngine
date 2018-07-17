@@ -9,7 +9,8 @@ GraphicsModule::GraphicsModule(const std::string& name)
       windowHeight(0),
       window(NULL),
       title(""),
-      sceneTree(std::shared_ptr<SceneTree>(new SceneTree()))
+      sceneTree(std::make_shared<SceneTree>()),
+	  timeSinceLastFrame(0L)
 { }
 
 bool GraphicsModule::Initialise(void) {
@@ -26,7 +27,9 @@ bool GraphicsModule::Initialise(void) {
     }
 
     GLFWVersion glfwVersion = GetGLFWVersion();
-    Logger::PrintLn(Logger::LEVEL_INFO, "\tGLFW %d.%d.%d Initialised OK.", glfwVersion.major, glfwVersion.revision, glfwVersion.revision);
+    Logger::PrintLn(Logger::LEVEL_INFO, "\tGLFW %d.%d.%d Initialised OK.", glfwVersion.major,
+		glfwVersion.revision, glfwVersion.revision);
+
 	return true;
 }
 
@@ -41,7 +44,14 @@ void GraphicsModule::StartMainLoop(void) {
 
     screenQuad = CreateScreenQuad();
 
+	long startTime = GetMillisecondsSinceEpoch();
+
     while (!ShouldCloseLoop()) {
+		// Move somewhere else - different area for update loop?
+		long currentTime = GetMillisecondsSinceEpoch();
+		timeSinceLastFrame = currentTime - startTime;
+		startTime = currentTime;
+
         glViewport(0, 0, windowWidth, windowHeight);
 
         std::map<std::string, GLuint> bufferData;
@@ -69,11 +79,11 @@ void GraphicsModule::DrawBuffersToScreen(std::map<std::string, GLuint>& bufferDa
 
     unsigned int i = 0;
 
-    for (auto& data : bufferData) {
+    for (const auto& [bufferName, textureID] : bufferData) {
         glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(GL_TEXTURE_2D, data.second);
+        glBindTexture(GL_TEXTURE_2D, textureID);
 
-        mainShader.SetUniform1i(data.first.c_str(), i++);
+        mainShader.SetUniform1i(bufferName.c_str(), i++);
     }
 
     screenQuad->Draw();
@@ -116,30 +126,32 @@ void GraphicsModule::AddDrawables(DrawablesList value) {
     this->drawables.insert(this->drawables.end(), value.begin(), value.end());
 }
 
-void GraphicsModule::CreateWindow(unsigned int ww, unsigned int wh, const char* winTitle, Colour3f backgroundColour) {
-    if (!IsWindowCreated()) {
-        this->window = CreateGLFWwindow(ww, wh, winTitle, NULL, NULL);
+GLFWwindow* GraphicsModule::CreateWindow(unsigned int ww, unsigned int wh, const char* winTitle, Colour3f backgroundColour) {
+	if (IsWindowCreated()) {
+		throw MultipleWindowsUnsupportedException();
+	}
 
-        if (IsWindowCreated()) {
-            this->windowWidth = ww;
-            this->windowHeight = wh;
-            this->title = winTitle;
+    this->window = CreateGLFWwindow(ww, wh, winTitle, NULL, NULL);
 
-            glfwMakeContextCurrent(window);
+	if (!IsWindowCreated()) {
+		hasErrors = true;
+		TerminateGLFW();
+		// TODO: Throw exception
+		return nullptr;
+	}
 
-            SetBackgroundColour(backgroundColour);
-            EnableGLFlags();
+    this->windowWidth = ww;
+    this->windowHeight = wh;
+    this->title = winTitle;
 
-            InitialiseGlew();
-        }
-        else {
-            hasErrors = true;
-            TerminateGLFW();
-        }
-    }
-    else {
-        throw MultipleWindowsUnsupportedException();
-    }
+    glfwMakeContextCurrent(window);
+
+    SetBackgroundColour(backgroundColour);
+    EnableGLFlags();
+
+    InitialiseGlew();
+
+	return this->window;
 }
 
 void GraphicsModule::InitialiseGlew(void) {
@@ -199,7 +211,6 @@ bool GraphicsModule::ShouldCloseLoop(void) {
     return glfwWindowShouldClose(window) || hasErrors;
 }
 
-// TODO: Why the fuck is this a method
 GLFWwindow* GraphicsModule::CreateGLFWwindow(int width, int height, const char* winTitle, GLFWmonitor* monitor, GLFWwindow* share) {
     return glfwCreateWindow(width, height, winTitle, monitor, share);
 }
@@ -216,4 +227,9 @@ GraphicsModule::GLFWVersion GraphicsModule::GetGLFWVersion(void) {
 
 void GraphicsModule::GLFWErrorCallback(int error, const char* description) {
     Logger::PrintLn(Logger::LEVEL_ERROR, "A GLFW error has occurred: [%d] %s", error, description);
+}
+
+long long GraphicsModule::GetMillisecondsSinceEpoch(void) {
+	auto now = std::chrono::system_clock::now();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
 }

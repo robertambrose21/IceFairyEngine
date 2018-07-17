@@ -28,18 +28,21 @@ namespace IceFairy {
         Camera(const Vector3f& eye, const Vector3f& lookAt, const Vector3f& up);
 
         /*! \param eye Sets the cameras eye */
-        void        SetEye(const Vector3f& eye);
+        void			SetEye(const Vector3f& eye);
+		Vector3f		GetEye(void) const;
         /*! \param lookAt Sets the cameras look at */
-        void        SetLookAt(const Vector3f& lookAt);
+        void			SetLookAt(const Vector3f& lookAt);
+		Vector3f		GetLookAt(void) const;
         /*! \param up Sets the cameras up vector */
-        void        SetUp(const Vector3f& up);
+        void			SetUp(const Vector3f& up);
+		Vector3f		GetUp(void) const;
         /*! \brief Updates the cameras view matrix with the current eye, lookAt and up vectors */
-        void        Update(void);
+        virtual void	Update(long timeSinceLastFrame);
 
         /*! \returns The cameras view matrix */
-        Matrix4f    GetViewMatrix(void) const;
+        Matrix4f		GetViewMatrix(void) const;
 
-    private:
+    protected:
         Vector3f    eye;
         Vector3f    lookAt;
         Vector3f    up;

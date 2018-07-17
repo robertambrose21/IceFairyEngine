@@ -327,7 +327,7 @@ namespace IceFairy {
             T vy = ((2 * (screenHeight - winy)) / screenHeight) - 1;
             T vz = 2 * winz - 1;
 
-            Vector4 v(vx, vy, vz, 1);
+            Vector4<T> v(vx, vy, vz, 1);
             T x = inv.Dot(0, v);
             T y = inv.Dot(1, v);
             T z = inv.Dot(2, v);
@@ -335,7 +335,7 @@ namespace IceFairy {
 
             float d = 1 / w;
 
-            Vector3 origin(x*d, y*d, z*d);
+            Vector3<T> origin(x*d, y*d, z*d);
 
             // Get direction
             winz = 1;
@@ -344,7 +344,7 @@ namespace IceFairy {
             vy = ((2 * (screenHeight - winy)) / (T)screenHeight) - 1;
             vz = 2 * winz - 1;
 
-            v = Vector4(vx, vy, vz, 1);
+            v = Vector4<T>(vx, vy, vz, 1);
             x = inv.Dot(0, v);
             y = inv.Dot(1, v);
             z = inv.Dot(2, v);

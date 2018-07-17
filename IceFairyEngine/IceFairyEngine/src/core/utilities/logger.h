@@ -65,15 +65,17 @@ namespace IceFairy {
     public:
         /*! \brief Logging level options */
         enum Level {
-            //! Debug level logging.
+			//! Trace level logging
+			LEVEL_TRACE,
+            //! Debug level logging
             LEVEL_DEBUG,
-            //! General information level logging.
+            //! General information level logging
             LEVEL_INFO,
-            //! Logging level for any warnings.
+            //! Logging level for any warnings
             LEVEL_WARNING,
-            //! Logging level for any errors.
+            //! Logging level for any errors
             LEVEL_ERROR,
-            //! Logging level for any critical errors.
+            //! Logging level for any critical errors
             LEVEL_CRITICAL
         };
 

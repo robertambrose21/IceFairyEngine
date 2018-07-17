@@ -4,11 +4,10 @@
 #include <memory>
 #include <vector>
 
-#include "glinclude.h"
-#include "math\vector.h"
-#include "math\matrix.h"
+#include "math/vector.h"
+#include "math/matrix.h"
 #include "sceneobject.h"
-#include "lighting\pointlight.h"
+#include "lighting/pointlight.h"
 
 namespace IceFairy {
     /*! \brief _SceneNode class for use with \ref SceneTree.
@@ -120,8 +119,9 @@ namespace IceFairy {
         /*! \brief Sets the point light for this SceneNode.
          *
          * \param pointLight The point \ref PointLight to set
+		 * \returns The \ref PointLight
          */
-        void                        SetPointLight(const std::shared_ptr<PointLight>& pointLight);
+		std::shared_ptr<PointLight> SetPointLight(const std::shared_ptr<PointLight>& pointLight);
         /*! \brief Sets the point light for this SceneNode.
         *
         * \param position The position of the \ref PointLight relative to the SceneNode
@@ -130,8 +130,9 @@ namespace IceFairy {
         * \param cAttenuation The constant attenuation of the \ref PointLight
         * \param lAttenuation The linear attenuation of the \ref PointLight
         * \param eAttenuation The exponential attenuation of the \ref PointLight
+		* \returns The \ref PointLight
         */
-        void                        SetPointLight(Vector3f position, Colour3f colour, float ambient,
+		std::shared_ptr<PointLight>  SetPointLight(Vector3f position, Colour3f colour, float ambient,
             float cAttenuation, float lAttenuation = 0.0f, float eAttenuation = 0.0f);
         /*! \brief Unsets this \ref PointLight, effectively turning it off. */
         void                        UnsetPointLight(void);

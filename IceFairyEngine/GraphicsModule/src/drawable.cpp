@@ -17,11 +17,12 @@ unsigned int Drawable::AddBufferObject(std::shared_ptr<BufferObject> bufferObjec
     return currentBufferIndex++;
 }
 
-unsigned int Drawable::AddBufferObject(std::string name, BufferObject::Type type, Shader shader, unsigned int width, unsigned int height) {
-	BufferObject::DrawFunction func = [&](Shader shader, std::shared_ptr<BufferObject> bo) -> void {
+unsigned int Drawable::AddBufferObject(std::string name, BufferObject::Type type, Shader shader,
+		unsigned int width, unsigned int height) {
+	BufferObject::DrawFunction func = [&](Shader shader, std::shared_ptr<BufferObject> bo) {
 		DrawFrame(shader, bo);
 	};
-    return AddBufferObject(std::shared_ptr<IceFairy::BufferObject>(new IceFairy::BufferObject(name, type, shader, func, width, height)));
+    return AddBufferObject(std::make_shared<IceFairy::BufferObject>(name, type, shader, func, width, height));
 }
 
 std::shared_ptr<BufferObject> Drawable::GetBufferObject(unsigned int index) {

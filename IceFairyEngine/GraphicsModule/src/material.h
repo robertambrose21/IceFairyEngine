@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "glinclude.h"
+#include "opengl/glinclude.h"
 #include "shader.h"
 #include "stbi/stb_image.h"
 #include "math/colour.h"

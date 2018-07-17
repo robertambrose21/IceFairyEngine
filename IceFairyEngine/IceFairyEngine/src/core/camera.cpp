@@ -7,25 +7,37 @@ Camera::Camera(const Vector3f& eye, const Vector3f& lookAt, const Vector3f& up)
       lookAt(lookAt),
       up(up)
 {
-    Update();
+    Update(0L);
 }
 
 void Camera::SetEye(const Vector3f& value) {
     this->eye = value;
 }
 
+Vector3f Camera::GetEye(void) const {
+	return this->eye;
+}
+
 void Camera::SetLookAt(const Vector3f& value) {
     this->lookAt = value;
+}
+
+Vector3f Camera::GetLookAt(void) const {
+	return this->lookAt;
 }
 
 void Camera::SetUp(const Vector3f& value) {
     this->up = value;
 }
 
-Matrix4f Camera::GetViewMatrix(void) const {
-    return viewMatrix;
+Vector3f Camera::GetUp(void) const {
+	return this->up;
 }
 
-void Camera::Update(void) {
-    viewMatrix = IceFairy::Matrix4f::LookAt(eye, lookAt, up);
+Matrix4f Camera::GetViewMatrix(void) const {
+    return this->viewMatrix;
+}
+
+void Camera::Update(long timeSinceLastFrame) {
+    this->viewMatrix = IceFairy::Matrix4f::LookAt(eye, lookAt, up);
 }

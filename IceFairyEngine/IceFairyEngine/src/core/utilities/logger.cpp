@@ -83,6 +83,8 @@ std::string Logger::GetLogLevelText(unsigned int level) {
 
 std::string Logger::_GetLogLevelText(unsigned int level) {
     switch (level) {
+	case LEVEL_TRACE:
+		return "TRACE";
     case LEVEL_DEBUG:
         return "DEBUG";
     case LEVEL_INFO:

@@ -3,7 +3,6 @@
 
 #include <vector>
 
-#include "glinclude.h"
 #include "scenenode.h"
 #include "lighting\pointlight.h"
 

@@ -18,13 +18,13 @@ _SceneNode::~_SceneNode()
 { }
 
 std::shared_ptr<_SceneNode> _SceneNode::AddChild(void) {
-    auto child = std::shared_ptr<_SceneNode>(new _SceneNode(shared_from_this()));
+    auto child = std::make_shared<_SceneNode>(shared_from_this());
     children.push_back(child);
     return child;
 }
 
 SceneObject _SceneNode::AddSceneObject(const Material& material, const VertexObject& vertexObject) {
-    auto sceneObject = std::shared_ptr<_SceneObject>(new _SceneObject());
+    auto sceneObject = std::make_shared<_SceneObject>();
     sceneObject->SetMaterial(material);
     sceneObject->SetVertexObject(vertexObject);
     sceneObjects.push_back(sceneObject);
@@ -87,7 +87,7 @@ void _SceneNode::ApplyZRotation(const float& degrees) {
 }
 
 void _SceneNode::ApplyTransformationMatrix(const Matrix4f& matrix, bool updateRealPositions) {
-    relativeTransformationMatrix = relativeTransformationMatrix * matrix;
+	relativeTransformationMatrix = matrix * relativeTransformationMatrix;
     relativePosition = (relativeTransformationMatrix * Vector4f(0.0f, 0.0f, 0.0f, 1.0f)).ToVector3();
 
     if (updateRealPositions) {
@@ -96,7 +96,9 @@ void _SceneNode::ApplyTransformationMatrix(const Matrix4f& matrix, bool updateRe
         for (SceneNode& child : children) {
             child->UpdateRealPositions();
         }
-    }
+    } else {
+		transformationMatrix = relativeTransformationMatrix;
+	}
 }
 
 Vector3f _SceneNode::GetRelativePosition(void) const {
@@ -139,14 +141,31 @@ void _SceneNode::ResetMatrixState(void) {
     UpdateRealPositions();
 }
 
-void _SceneNode::SetPointLight(const std::shared_ptr<PointLight>& value) {
-    this->pointLight = value;
+std::shared_ptr<PointLight> _SceneNode::SetPointLight(const std::shared_ptr<PointLight>& value) {
+	return SetPointLight(
+		value->GetPosition(),
+		value->GetColour(),
+		value->GetAmbient(),
+		value->GetConstantAttentuation(),
+		value->GetLinearAttentuation(),
+		value->GetExponentialAttentuation()
+	);
 }
 
-void _SceneNode::SetPointLight(Vector3f p, Colour3f c, float a,  float cAtt, float lAtt, float eAtt)
+std::shared_ptr<PointLight> _SceneNode::SetPointLight(Vector3f p, Colour3f c, float a,  float cAtt, float lAtt, float eAtt)
 {
-    //SetPointLight(std::shared_ptr<PointLight>(new PointLight(p, c, a, cAtt, lAtt, eAtt)));
-	SetPointLight(std::make_shared<PointLight>(p, c, a, cAtt, lAtt, eAtt));
+	if (!this->pointLight) {
+		this->pointLight = std::make_shared<PointLight>(p, c, a, cAtt, lAtt, eAtt);
+	} else {
+		this->pointLight->SetPosition(p);
+		this->pointLight->SetColour(c);
+		this->pointLight->SetAmbient(a);
+		this->pointLight->SetConstantAttentuation(cAtt);
+		this->pointLight->SetLinearAttentuation(lAtt);
+		this->pointLight->SetExponentialAttentuation(eAtt);
+	}
+
+	return this->pointLight;
 }
 
 void _SceneNode::UnsetPointLight(void) {
