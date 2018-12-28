@@ -5,6 +5,7 @@
 #include "core/camera.h"
 
 #include <iostream>
+#include <algorithm>
 #include <ctype.h>
 
 namespace IceFairy {
@@ -40,7 +41,6 @@ namespace IceFairy {
 
 		float		speed;
 		Vector3f	position;
-		Vector2d	lastMousePosition;
 		bool		keys[256];
 		float		yaw;
 		float		pitch;

@@ -5,8 +5,7 @@ using namespace IceFairy;
 FPSCamera::FPSCamera(const Vector3f& eye, const Vector3f& lookAt, const Vector3f& up, float speed)
 	: Camera(eye, lookAt, up),
 	  speed(speed),
-	  position(Vector3f(0.0f)),
-	  lastMousePosition(Vector2d(0.0)),
+	  position(eye),
 	  yaw(0.0f),
 	  pitch(0.0f)
 {
@@ -40,13 +39,14 @@ void FPSCamera::Down(void) {
 }
 
 void FPSCamera::OnMouseMovement(double xpos, double ypos) {
+	static Vector2d lastMousePosition(0.0, 0.0);
 	Vector2d currentPosition(xpos, ypos);
-	Vector2d difference = this->lastMousePosition - currentPosition;
+	Vector2d difference = lastMousePosition - currentPosition;
 
 	this->yaw += (float) difference.x * 0.01f;
-	this->pitch += (float) difference.y * 0.01f;
+	this->pitch = std::max(std::min(pitch + (float) difference.y * 0.01f, 90.0f), -90.0f);
 
-	this->lastMousePosition = currentPosition;
+	lastMousePosition = currentPosition;
 }
 
 void FPSCamera::OnMouseButtonDown(int button, int mods) {
