@@ -168,6 +168,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../IceFairyEngine/src;C:\VulkanSDK\1.1.82.1\Include;..\..\Dependencies\glfw-3.2.1.bin.WIN64\include;..\..\Dependencies\glew-2.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

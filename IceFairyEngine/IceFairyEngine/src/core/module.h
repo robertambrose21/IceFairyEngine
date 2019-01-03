@@ -68,7 +68,7 @@ namespace IceFairy {
 		 *
 		 * \returns true if initialisation was successful
          */
-		virtual bool                    Initialise(void);
+		virtual bool            Initialise(void);
         /*! \brief Returns the name of this module.
          * 
          * \returns the name of this module.
