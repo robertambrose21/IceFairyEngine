@@ -7,6 +7,8 @@
 #include <vector>
 
 #include "core/module.h"
+#include "validationlayers.h"
+#include "vulkanexception.h"
 
 namespace IceFairy {
 	class VulkanModule : public Module {
@@ -27,17 +29,8 @@ namespace IceFairy {
 		void InitialiseWindow();
 		void InitialiseVulkanInstance();
 
+		std::vector<const char*> GetRequiredExtensions();
+
 		void RunMainLoop(void);
-
-		// Move to debugging file
-		void setupDebugCallback();
-		std::vector<const char*> getRequiredExtensions();
-		bool checkValidationLayerSupport();
-
-		static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
-			std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-
-			return VK_FALSE;
-		}
 	};
 }
