@@ -32,7 +32,6 @@
     <ClCompile Include="src\shapes\cubeobject.cpp" />
     <ClCompile Include="src\stbi\stb_image.c" />
     <ClCompile Include="src\vertexobject.cpp" />
-    <ClCompile Include="src\vulkan\validationlayers.cpp" />
     <ClCompile Include="src\vulkan\vulkanmodule.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -53,7 +52,6 @@
     <ClInclude Include="src\shapes\cubeobject.h" />
     <ClInclude Include="src\stbi\stb_image.h" />
     <ClInclude Include="src\vertexobject.h" />
-    <ClInclude Include="src\vulkan\validationlayers.h" />
     <ClInclude Include="src\vulkan\vulkanexception.h" />
     <ClInclude Include="src\vulkan\vulkanmodule.h" />
   </ItemGroup>
