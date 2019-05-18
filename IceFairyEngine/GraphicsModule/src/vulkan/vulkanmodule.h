@@ -11,6 +11,7 @@
 
 #include "core/module.h"
 #include "vulkanexception.h"
+#include "shadermodule.h"
 
 namespace IceFairy {
 	class VulkanModule : public Module {
@@ -27,6 +28,9 @@ namespace IceFairy {
 		// TODO: change this
 		const int WIDTH = 800;
 		const int HEIGHT = 600;
+
+		// TODO: change this too
+		const int MAX_FRAMES_IN_FLIGHT = 2;
 
 		typedef struct {
 			std::optional<uint32_t> graphicsFamily;
@@ -57,22 +61,38 @@ namespace IceFairy {
 		std::vector<VkImage> swapChainImages;
 		VkFormat swapChainImageFormat;
 		VkExtent2D swapChainExtent;
+		std::vector<VkImageView> swapChainImageViews;
+
+		VkRenderPass renderPass;
+		VkPipelineLayout pipelineLayout;
+		VkPipeline graphicsPipeline;
+
+		std::vector<VkFramebuffer> swapChainFramebuffers;
+
+		VkCommandPool commandPool;
+		std::vector<VkCommandBuffer> commandBuffers;
+
+		// Todo: change this
+		std::vector<VkSemaphore> imageAvailableSemaphores;
+		std::vector<VkSemaphore> renderFinishedSemaphores;
+		std::vector<VkFence> inFlightFences;
+		size_t currentFrame = 0;
 
 		// Base Initialisation
-		void InitialiseWindow();
-		void InitialiseVulkanInstance();
-		void CreateSurface();
-		void CreateSwapChain();
+		void InitialiseWindow(void);
+		void InitialiseVulkanInstance(void);
+		void CreateSurface(void);
+		void CreateSwapChain(void);
 
 		void RunMainLoop(void);
 
 		// Physical Device
-		void PickPhysicalDevice();
+		void PickPhysicalDevice(void);
 		bool IsDeviceSuitable(VkPhysicalDevice device);
 		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
 
 		// Logical Device
-		void CreateLogicalDevice();
+		void CreateLogicalDevice(void);
 
 		// Swap chain
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
@@ -80,13 +100,35 @@ namespace IceFairy {
 		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes);
 		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
-		std::vector<const char*> GetRequiredExtensions();
+		// Image views
+		void CreateImageViews(void);
+
+		// Graphics pipeline
+		void CreateGraphicsPipeline(void);
+
+		// Render pass
+		void CreateRenderPass(void);
+
+		// Frame Buffers
+		void CreateFrameBuffers(void);
+
+		// Commands
+		void CreateCommandPool(void);
+		void CreateCommandBuffers(void);
+
+		// Drawing
+		void DrawFrame(void);
+
+		// Semaphores
+		void CreateSyncObjects(void);
+
+		std::vector<const char*> GetRequiredExtensions(void);
 		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
 
 		// Debugging
 		VkDebugUtilsMessengerEXT callback;
 
-		void SetupDebugCallback();
+		void SetupDebugCallback(void);
 
 		static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 			VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
