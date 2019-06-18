@@ -28,8 +28,6 @@ namespace IceFairy {
 		void SetIsFrameBufferResized(const bool& value);
 
 	private:
-
-		void SetIsFrameBufferResized(const bool& value);
 		// TODO: Pass this in from somewhere - some config
 		const int WIDTH = 800;
 		const int HEIGHT = 600;

@@ -94,19 +94,6 @@ void VulkanModule::CleanUp(void) {
 
 	vkDestroyCommandPool(device, commandPool, nullptr);
 
-	for (auto framebuffer : swapChainFramebuffers) {
-		vkDestroyFramebuffer(device, framebuffer, nullptr);
-	}
-
-	vkDestroyPipeline(device, graphicsPipeline, nullptr);
-	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-	vkDestroyRenderPass(device, renderPass, nullptr);
-
-	for (auto imageView : swapChainImageViews) {
-		vkDestroyImageView(device, imageView, nullptr);
-	}
-
-	vkDestroySwapchainKHR(device, swapChain, nullptr);
 	vkDestroyDevice(device, nullptr);
 
 	if (enableValidationLayers) {
@@ -124,6 +111,11 @@ void VulkanModule::StartMainLoop(void) {
 	RunMainLoop();
 }
 
+static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+	auto vulkanModule = reinterpret_cast<VulkanModule*>(glfwGetWindowUserPointer(window));
+	vulkanModule->SetIsFrameBufferResized(true);
+}
+
 void VulkanModule::InitialiseWindow(void) {
 	glfwInit();
 
@@ -133,11 +125,6 @@ void VulkanModule::InitialiseWindow(void) {
 	window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
 	glfwSetWindowUserPointer(window, this);
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
-}
-
-static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-	auto vulkanModule = reinterpret_cast<VulkanModule*>(glfwGetWindowUserPointer(window));
-	vulkanModule->SetIsFrameBufferResized(true);
 }
 
 void VulkanModule::SetIsFrameBufferResized(const bool& value) {
