@@ -24,12 +24,17 @@ namespace IceFairy {
 
 		void StartMainLoop(void);
 
+		// TODO: Rethink how to do this - we don't want this public
+		void SetIsFrameBufferResized(const bool& value);
+
 	private:
-		// TODO: change this
+
+		void SetIsFrameBufferResized(const bool& value);
+		// TODO: Pass this in from somewhere - some config
 		const int WIDTH = 800;
 		const int HEIGHT = 600;
 
-		// TODO: change this too
+		// TODO: config?
 		const int MAX_FRAMES_IN_FLIGHT = 2;
 
 		typedef struct {
@@ -72,11 +77,13 @@ namespace IceFairy {
 		VkCommandPool commandPool;
 		std::vector<VkCommandBuffer> commandBuffers;
 
-		// Todo: change this
+		// Todo: change this - change it to what??
 		std::vector<VkSemaphore> imageAvailableSemaphores;
 		std::vector<VkSemaphore> renderFinishedSemaphores;
 		std::vector<VkFence> inFlightFences;
 		size_t currentFrame = 0;
+
+		bool isFrameBufferResized = false;
 
 		// Base Initialisation
 		void InitialiseWindow(void);
@@ -99,6 +106,8 @@ namespace IceFairy {
 		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes);
 		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+		void RecreateSwapChain(void);
+		void CleanupSwapChain(void);
 
 		// Image views
 		void CreateImageViews(void);

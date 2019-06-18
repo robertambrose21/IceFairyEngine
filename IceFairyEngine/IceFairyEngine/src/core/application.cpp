@@ -41,9 +41,8 @@ std::shared_ptr<Module> Application::GetModule(std::string moduleName) {
     if (IsModuleLoaded(moduleName)) {
         return modules[moduleName];
     }
-    else {
-        throw NoSuchModuleException();
-    }
+
+    throw NoSuchModuleException();
 }
 
 bool Application::IsModuleLoaded(std::string moduleName) {
