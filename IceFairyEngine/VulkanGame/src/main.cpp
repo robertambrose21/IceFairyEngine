@@ -1,6 +1,12 @@
+#ifdef _MSC_VER
 #define _CRTDBG_MAP_ALLOC  
-#include <stdlib.h>  
-#include <crtdbg.h>  
+#include <crtdbg.h>
+#else
+#define _ASSERT(expr) ((void)0)
+#define _ASSERTE(expr) ((void)0)
+#endif
+
+#include <stdlib.h>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -11,18 +17,20 @@
 #include <cstring>
 #include <cstdlib>
 
-#include "vulkan\vulkanmodule.h"
+#include "vulkan/vulkanmodule.h"
 
 #define ICE_FAIRY_TREAT_VERBOSE_AS_DEBUG true
 
 int main(int argc, char** argv) {
+	#ifdef _MSC_VER
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	#endif
 
-#ifdef NDEBUG
-	IceFairy::Logger::SetLogLevel(IceFairy::Logger::LEVEL_INFO);
-#else
-	IceFairy::Logger::SetLogLevel(IceFairy::Logger::LEVEL_DEBUG);
-#endif
+ #ifdef NDEBUG
+ 	IceFairy::Logger::SetLogLevel(IceFairy::Logger::LEVEL_INFO);
+ #else
+ 	IceFairy::Logger::SetLogLevel(IceFairy::Logger::LEVEL_DEBUG);
+ #endif
 
 	/*auto app = std::make_shared<DemoApplication>(argc, argv);
 	app->Initialise();
@@ -35,9 +43,12 @@ int main(int argc, char** argv) {
 		module->CleanUp();
 	}
 	catch (const std::exception & e) {
-		IceFairy::Logger::PrintLn(IceFairy::Logger::LEVEL_ERROR, e.what());
+		std::cout << e.what() << std::endl;
+		// IceFairy::Logger::PrintLn(IceFairy::Logger::LEVEL_ERROR, e.what());
 		return EXIT_FAILURE;
 	}
+
+	std::cout << "Hey buddy" << std::endl;
 
 	return EXIT_SUCCESS;
 }

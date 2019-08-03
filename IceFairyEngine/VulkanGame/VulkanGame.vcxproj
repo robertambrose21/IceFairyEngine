@@ -159,9 +159,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\GraphicsModule\GraphicsModule.vcxproj">
       <Project>{7aa60ac1-f27b-435e-8a41-3dff631a670c}</Project>
     </ProjectReference>
@@ -171,6 +168,9 @@
     <ProjectReference Include="..\Samples\Samples.vcxproj">
       <Project>{d53b625c-9cd8-4150-9cf8-6431fe86f100}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
