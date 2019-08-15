@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
  #ifdef NDEBUG
  	IceFairy::Logger::SetLogLevel(IceFairy::Logger::LEVEL_INFO);
  #else
- 	IceFairy::Logger::SetLogLevel(IceFairy::Logger::LEVEL_DEBUG);
+ 	IceFairy::Logger::SetLogLevel(IceFairy::Logger::LEVEL_TRACE);
  #endif
 
 	/*auto app = std::make_shared<DemoApplication>(argc, argv);

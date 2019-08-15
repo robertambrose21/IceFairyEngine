@@ -3,17 +3,50 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+
 #include <string>
 #include <vector>
 #include <optional>
 #include <set>
 #include <algorithm>
+#include <array>
 
 #include "core/module.h"
 #include "vulkanexception.h"
 #include "shadermodule.h"
 
 namespace IceFairy {
+
+	typedef struct {
+		glm::vec2 pos;
+		glm::vec3 color;
+
+		static VkVertexInputBindingDescription getBindingDescription() {
+			VkVertexInputBindingDescription bindingDescription = {};
+			bindingDescription.binding = 0;
+			bindingDescription.stride = sizeof(Vertex);
+			bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+			return bindingDescription;
+		}
+
+		static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+			std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions = {};
+			attributeDescriptions[0].binding = 0;
+			attributeDescriptions[0].location = 0;
+			attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+			attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+			attributeDescriptions[1].binding = 0;
+			attributeDescriptions[1].location = 1;
+			attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+			attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+			return attributeDescriptions;
+		}
+	} Vertex;
+
 	class VulkanModule : public Module {
 	public:
 		VulkanModule(const std::string& name);
@@ -75,6 +108,11 @@ namespace IceFairy {
 		VkCommandPool commandPool;
 		std::vector<VkCommandBuffer> commandBuffers;
 
+		VkBuffer vertexBuffer;
+		VkDeviceMemory vertexBufferMemory;
+		VkBuffer indexBuffer;
+		VkDeviceMemory indexBufferMemory;
+
 		// Todo: change this - change it to what??
 		std::vector<VkSemaphore> imageAvailableSemaphores;
 		std::vector<VkSemaphore> renderFinishedSemaphores;
@@ -129,6 +167,15 @@ namespace IceFairy {
 		// Semaphores
 		void CreateSyncObjects(void);
 
+		// Buffers
+		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
+		// Vertex buffer
+		void CreateVertexBuffer(void);
+		void CreateIndexBuffer(void);
+		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
 		std::vector<const char*> GetRequiredExtensions(void);
 		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
 
@@ -168,4 +215,5 @@ namespace IceFairy {
 
 		}
 	};
+
 }
