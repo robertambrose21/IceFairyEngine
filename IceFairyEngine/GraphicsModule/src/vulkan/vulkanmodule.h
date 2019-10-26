@@ -3,7 +3,9 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <string>
 #include <vector>
@@ -11,6 +13,7 @@
 #include <set>
 #include <algorithm>
 #include <array>
+#include <chrono>
 
 #include "core/module.h"
 #include "vulkanexception.h"
@@ -83,6 +86,15 @@ namespace IceFairy {
 			std::vector<VkPresentModeKHR> presentModes;
 		} SwapChainSupportDetails;
 
+		// Take note:
+		// https://www.khronos.org/registry/vulkan/specs/1.1-extensions/html/chap14.html#interfaces-resources-layout
+		// Explanation bottom of this tutorial https://vulkan-tutorial.com/en/Uniform_buffers/Descriptor_pool_and_sets
+		typedef struct {
+			alignas(16) glm::mat4 model;
+			alignas(16) glm::mat4 view;
+			alignas(16) glm::mat4 proj;
+		} UniformBufferObject;
+
 		GLFWwindow* window;
 		VkInstance instance;
 		VkSurfaceKHR surface;
@@ -100,6 +112,7 @@ namespace IceFairy {
 		std::vector<VkImageView> swapChainImageViews;
 
 		VkRenderPass renderPass;
+		VkDescriptorSetLayout descriptorSetLayout;
 		VkPipelineLayout pipelineLayout;
 		VkPipeline graphicsPipeline;
 
@@ -112,6 +125,12 @@ namespace IceFairy {
 		VkDeviceMemory vertexBufferMemory;
 		VkBuffer indexBuffer;
 		VkDeviceMemory indexBufferMemory;
+
+		std::vector<VkBuffer> uniformBuffers;
+		std::vector<VkDeviceMemory> uniformBuffersMemory;
+
+		VkDescriptorPool descriptorPool;
+		std::vector<VkDescriptorSet> descriptorSets;
 
 		// Todo: change this - change it to what??
 		std::vector<VkSemaphore> imageAvailableSemaphores;
@@ -175,6 +194,13 @@ namespace IceFairy {
 		void CreateVertexBuffer(void);
 		void CreateIndexBuffer(void);
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+		// Uniform buffer
+		void CreateDescriptorSetLayout(void);
+		void CreateUniformBuffers(void);
+		void UpdateUniformBuffer(uint32_t currentImage);
+		void CreateDescriptorPool(void);
+		void CreateDescriptorSets(void);
 
 		std::vector<const char*> GetRequiredExtensions(void);
 		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
