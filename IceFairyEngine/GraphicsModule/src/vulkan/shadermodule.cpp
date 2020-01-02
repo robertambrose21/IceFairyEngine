@@ -18,13 +18,9 @@ void ShaderModule::LoadFromFile(const std::string& vertexShader, const std::stri
 
 	CreatePipelineShaderStageCreateInfo(vertexShaderModule, fragmentShaderModule);
 
-	/*vkDestroyShaderModule(device, vertexShaderModule, nullptr);
-	vkDestroyShaderModule(device, fragmentShaderModule, nullptr);*/
-
 	isLoaded = true;
 }
 
-// TODO: Do we need this?
 void ShaderModule::CleanUp(void) {
 	vkDestroyShaderModule(device, vertexShaderModule, nullptr);
 	vkDestroyShaderModule(device, fragmentShaderModule, nullptr);
