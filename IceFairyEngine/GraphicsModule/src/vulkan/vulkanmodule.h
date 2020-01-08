@@ -102,9 +102,9 @@ namespace IceFairy {
 		} QueueFamilyIndices;
 
 		typedef struct {
-			VkSurfaceCapabilitiesKHR capabilities;
-			std::vector<VkSurfaceFormatKHR> formats;
-			std::vector<VkPresentModeKHR> presentModes;
+			vk::SurfaceCapabilitiesKHR capabilities;
+			std::vector<vk::SurfaceFormatKHR> formats;
+			std::vector<vk::PresentModeKHR> presentModes;
 		} SwapChainSupportDetails;
 
 		// Take note:
@@ -117,22 +117,22 @@ namespace IceFairy {
 		} UniformBufferObject;
 
 		GLFWwindow* window;
-		VkInstance instance;
+		vk::Instance instance;
 		VkSurfaceKHR surface;
 
-		VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-		VkDevice device;
+		vk::PhysicalDevice physicalDevice;
+		vk::Device device;
 
 		VkQueue graphicsQueue;
 		VkQueue presentQueue;
 
 		VkSwapchainKHR swapChain;
 		std::vector<VkImage> swapChainImages;
-		VkFormat swapChainImageFormat;
+		vk::Format swapChainImageFormat;
 		VkExtent2D swapChainExtent;
 		std::vector<VkImageView> swapChainImageViews;
 
-		VkRenderPass renderPass;
+		vk::RenderPass renderPass;
 		VkDescriptorSetLayout descriptorSetLayout;
 		VkPipelineLayout pipelineLayout;
 		VkPipeline graphicsPipeline;
@@ -160,7 +160,7 @@ namespace IceFairy {
 		VkImageView textureImageView;
 		VkSampler textureSampler;
 		VkDeviceMemory textureImageMemory;
-		VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
+		vk::SampleCountFlagBits msaaSamples = vk::SampleCountFlagBits::e1;
 		VkImage colorImage;
 		VkDeviceMemory colorImageMemory;
 		VkImageView colorImageView;
@@ -188,33 +188,33 @@ namespace IceFairy {
 
 		// Physical Device
 		void PickPhysicalDevice(void);
-		bool IsDeviceSuitable(VkPhysicalDevice device);
-		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
+		bool IsDeviceSuitable(vk::PhysicalDevice device);
+		QueueFamilyIndices FindQueueFamilies(vk::PhysicalDevice device);
 
 		// Logical Device
 		void CreateLogicalDevice(void);
 
 		// Swap chain
-		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
-		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes);
-		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+		SwapChainSupportDetails QuerySwapChainSupport(vk::PhysicalDevice device);
+		vk::SurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats);
+		vk::PresentModeKHR ChooseSwapPresentMode(const std::vector<vk::PresentModeKHR> availablePresentModes);
+		vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities);
 		void RecreateSwapChain(void);
 		void CleanupSwapChain(void);
 
 		// Image views
 		void CreateImageViews(void);
-		VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
+		vk::ImageView CreateImageView(VkImage image, vk::Format format, vk::ImageAspectFlags aspectFlags, uint32_t mipLevels);
 		void CreateTextureImage(void);
 		void CreateTextureImageView(void);
-		void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling,
-			VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+		void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling,
+			vk::ImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 		VkCommandBuffer BeginSingleTimeCommands(void);
 		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
-		void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
+		void TransitionImageLayout(VkImage image, vk::Format format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
 		void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 		void GenerateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
-		VkSampleCountFlagBits GetMaxUsableSampleCount(void);
+		vk::SampleCountFlagBits GetMaxUsableSampleCount(void);
 		void CreateColorResources(void);
 
 		// Graphics pipeline
@@ -243,9 +243,9 @@ namespace IceFairy {
 
 		// Depth buffering
 		void CreateDepthResources(void);
-		VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
-		VkFormat FindDepthFormat(void);
-		bool HasStencilComponent(VkFormat format);
+		vk::Format FindSupportedFormat(const std::vector<vk::Format>& candidates, VkImageTiling tiling, vk::FormatFeatureFlags features);
+		vk::Format FindDepthFormat(void);
+		bool HasStencilComponent(vk::Format format);
 
 		// Vertex buffer
 		void CreateVertexBuffer(void);
@@ -261,10 +261,10 @@ namespace IceFairy {
 		void CreateDescriptorSets(void);
 
 		std::vector<const char*> GetRequiredExtensions(void);
-		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
+		bool CheckDeviceExtensionSupport(vk::PhysicalDevice device);
 
 		// Debugging
-		VkDebugUtilsMessengerEXT callback;
+		vk::DebugUtilsMessengerEXT callback;
 
 		void SetupDebugCallback(void);
 
