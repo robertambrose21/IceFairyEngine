@@ -60,11 +60,7 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(VkInstance instance, 
 }
 
 bool CheckValidationLayerSupport(void) {
-	uint32_t layerCount;
-	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-
-	std::vector<VkLayerProperties> availableLayers(layerCount);
-	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+	std::vector<vk::LayerProperties>availableLayers = vk::enumerateInstanceLayerProperties();
 
 	for (const char* layerName : validationLayers) {
 		bool layerFound = false;
@@ -200,7 +196,7 @@ void VulkanModule::InitialiseVulkanInstance(void) {
 		}
 
 		vk::ApplicationInfo appInfo("Vulkan Demo", 1, "IceFairyEngine", 0.1, VK_API_VERSION_1_1);
-		vk::InstanceCreateInfo createInfo(vk::InstanceCreateFlags(), &appInfo, numLayers, layerNames, static_cast<uint32_t>(extensions.size()), extensions.data());
+		vk::InstanceCreateInfo createInfo({}, &appInfo, numLayers, layerNames, static_cast<uint32_t>(extensions.size()), extensions.data());
 
 		instance = vk::createInstance(createInfo);;
 	}
@@ -258,9 +254,7 @@ void VulkanModule::CreateSwapChain(void) {
 		throw VulkanException("failed to create swap chain!");
 	}
 
-	vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
-	swapChainImages.resize(imageCount);
-	vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
+	swapChainImages = device.getSwapchainImagesKHR(swapChain);
 
 	swapChainImageFormat = surfaceFormat.format;
 	swapChainExtent = extent;
@@ -338,41 +332,28 @@ VulkanModule::QueueFamilyIndices VulkanModule::FindQueueFamilies(vk::PhysicalDev
 void VulkanModule::CreateLogicalDevice(void) {
 	QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
 
-	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+	std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
 	std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
 	float queuePriority = 1.0f;
 	for (uint32_t queueFamily : uniqueQueueFamilies) {
-		VkDeviceQueueCreateInfo queueCreateInfo = {};
-		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-		queueCreateInfo.queueFamilyIndex = queueFamily;
-		queueCreateInfo.queueCount = 1;
-		queueCreateInfo.pQueuePriorities = &queuePriority;
-		queueCreateInfos.push_back(queueCreateInfo);
+		queueCreateInfos.push_back(vk::DeviceQueueCreateInfo({}, queueFamily, 1, &queuePriority));
 	}
 
-	VkPhysicalDeviceFeatures deviceFeatures = {};
-	deviceFeatures.samplerAnisotropy = VK_TRUE;
-	deviceFeatures.sampleRateShading = VK_TRUE; // enable sample shading feature for the device
+	vk::PhysicalDeviceFeatures deviceFeatures;
+	deviceFeatures.samplerAnisotropy = true;
+	deviceFeatures.sampleRateShading = true;
 
-	VkDeviceCreateInfo createInfo = {};
-	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
-	createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-	createInfo.pQueueCreateInfos = queueCreateInfos.data();
-
-	createInfo.pEnabledFeatures = &deviceFeatures;
-
-	createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-	createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+	uint32_t enabledLayerCount = 0;
+	const char* const* enabledLayerNames = nullptr;
 
 	if (enableValidationLayers) {
-		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-		createInfo.ppEnabledLayerNames = validationLayers.data();
+		enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+		enabledLayerNames = validationLayers.data();
 	}
-	else {
-		createInfo.enabledLayerCount = 0;
-	}
+
+	vk::DeviceCreateInfo createInfo({}, static_cast<uint32_t>(queueCreateInfos.size()), queueCreateInfos.data(), enabledLayerCount,
+		enabledLayerNames, static_cast<uint32_t>(deviceExtensions.size()), deviceExtensions.data(), &deviceFeatures);
 
 	// TODO: Catch globally
 	try {
