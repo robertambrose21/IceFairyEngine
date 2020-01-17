@@ -2,7 +2,7 @@
 
 using namespace IceFairy;
 
-ShaderModule::ShaderModule(VkDevice device)
+ShaderModule::ShaderModule(vk::Device device)
 	: device(device),
 	  isLoaded(false)
 { }
@@ -22,11 +22,11 @@ void ShaderModule::LoadFromFile(const std::string& vertexShader, const std::stri
 }
 
 void ShaderModule::CleanUp(void) {
-	vkDestroyShaderModule(device, vertexShaderModule, nullptr);
-	vkDestroyShaderModule(device, fragmentShaderModule, nullptr);
+	device.destroyShaderModule(vertexShaderModule, nullptr);
+	device.destroyShaderModule(fragmentShaderModule, nullptr);
 }
 
-VkPipelineShaderStageCreateInfo ShaderModule::GetVertexShaderStageInfo(void) const {
+vk::PipelineShaderStageCreateInfo ShaderModule::GetVertexShaderStageInfo(void) const {
 	if (!isLoaded) {
 		throw VulkanException("Cannot retrieve vertex shader stage info, shader has not been created yet");
 	}
@@ -34,7 +34,7 @@ VkPipelineShaderStageCreateInfo ShaderModule::GetVertexShaderStageInfo(void) con
 	return vertexShaderStageInfo;
 }
 
-VkPipelineShaderStageCreateInfo ShaderModule::GetFragmentShaderStageInfo(void) const {
+vk::PipelineShaderStageCreateInfo ShaderModule::GetFragmentShaderStageInfo(void) const {
 	if (!isLoaded) {
 		throw VulkanException("Cannot retrieve fragment shader stage info, shader has not been created yet");
 	}
@@ -58,28 +58,18 @@ std::vector<char> ShaderModule::ReadFile(const std::string& filename) {
 	return buffer;
 }
 
-VkShaderModule ShaderModule::CreateShaderModule(const std::vector<char>& code) {
-	VkShaderModuleCreateInfo createInfo = {};
-	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	createInfo.codeSize = code.size();
-	createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+vk::ShaderModule ShaderModule::CreateShaderModule(const std::vector<char>& code) {
+	vk::ShaderModuleCreateInfo createInfo({}, code.size(), reinterpret_cast<const uint32_t*>(code.data()));
 
-	VkShaderModule shaderModule;
-	if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create shader module!");
+	try {
+		return device.createShaderModule(createInfo);
 	}
-
-	return shaderModule;
+	catch (std::runtime_error err) {
+		throw VulkanException("failed to create shader module!");
+	}
 }
 
-void ShaderModule::CreatePipelineShaderStageCreateInfo(VkShaderModule vertexShaderModule, VkShaderModule fragmentShaderModule) {
-	vertexShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	vertexShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-	vertexShaderStageInfo.module = vertexShaderModule;
-	vertexShaderStageInfo.pName = "main";
-
-	fragmentShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	fragmentShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	fragmentShaderStageInfo.module = fragmentShaderModule;
-	fragmentShaderStageInfo.pName = "main";
+void ShaderModule::CreatePipelineShaderStageCreateInfo(vk::ShaderModule vertexShaderModule, vk::ShaderModule fragmentShaderModule) {
+	vertexShaderStageInfo = vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eVertex, vertexShaderModule, "main");
+	fragmentShaderStageInfo = vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eFragment, fragmentShaderModule, "main");
 }

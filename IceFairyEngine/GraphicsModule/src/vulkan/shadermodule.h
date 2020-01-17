@@ -3,6 +3,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include "vulkan/vulkan.hpp"
+
 #include <string>
 #include <vector>
 #include <fstream>
@@ -14,25 +16,25 @@ namespace IceFairy {
 
 	class ShaderModule {
 	public:
-		ShaderModule(VkDevice device);
+		ShaderModule(vk::Device device);
 
 		void LoadFromFile(const std::string& vertexShader, const std::string& fragmentShader);
 		void CleanUp(void);
-		VkPipelineShaderStageCreateInfo GetVertexShaderStageInfo(void) const;
-		VkPipelineShaderStageCreateInfo GetFragmentShaderStageInfo(void) const;
+		vk::PipelineShaderStageCreateInfo GetVertexShaderStageInfo(void) const;
+		vk::PipelineShaderStageCreateInfo GetFragmentShaderStageInfo(void) const;
 		
 	private:
-		VkDevice device;
-		VkPipelineShaderStageCreateInfo vertexShaderStageInfo;
-		VkPipelineShaderStageCreateInfo fragmentShaderStageInfo;
+		vk::Device device;
+		vk::PipelineShaderStageCreateInfo vertexShaderStageInfo;
+		vk::PipelineShaderStageCreateInfo fragmentShaderStageInfo;
 		bool isLoaded;
 
-		VkShaderModule vertexShaderModule;
-		VkShaderModule fragmentShaderModule;
+		vk::ShaderModule vertexShaderModule;
+		vk::ShaderModule fragmentShaderModule;
 
 		static std::vector<char> ReadFile(const std::string& filename);
-		VkShaderModule CreateShaderModule(const std::vector<char>& code);
-		void CreatePipelineShaderStageCreateInfo(VkShaderModule vertexShaderModule, VkShaderModule fragmentShaderModule);
+		vk::ShaderModule CreateShaderModule(const std::vector<char>& code);
+		void CreatePipelineShaderStageCreateInfo(vk::ShaderModule vertexShaderModule, vk::ShaderModule fragmentShaderModule);
 	};
 
 };
