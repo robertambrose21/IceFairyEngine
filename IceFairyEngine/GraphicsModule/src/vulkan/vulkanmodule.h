@@ -128,25 +128,25 @@ namespace IceFairy {
 
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
-		VkBuffer vertexBuffer;
-		VkDeviceMemory vertexBufferMemory;
-		VkBuffer indexBuffer;
-		VkDeviceMemory indexBufferMemory;
+		vk::Buffer vertexBuffer;
+		vk::DeviceMemory vertexBufferMemory;
+		vk::Buffer indexBuffer;
+		vk::DeviceMemory indexBufferMemory;
 
-		std::vector<VkBuffer> uniformBuffers;
-		std::vector<VkDeviceMemory> uniformBuffersMemory;
+		std::vector<vk::Buffer> uniformBuffers;
+		std::vector<vk::DeviceMemory> uniformBuffersMemory;
 
 		VkDescriptorPool descriptorPool;
 		std::vector<VkDescriptorSet> descriptorSets;
 
 		uint32_t mipLevels;
-		VkImage textureImage;
+		vk::Image textureImage;
 		VkImageView textureImageView;
 		VkSampler textureSampler;
-		VkDeviceMemory textureImageMemory;
+		vk::DeviceMemory textureImageMemory;
 		vk::SampleCountFlagBits msaaSamples = vk::SampleCountFlagBits::e1;
-		VkImage colorImage;
-		VkDeviceMemory colorImageMemory;
+		vk::Image colorImage;
+		vk::DeviceMemory colorImageMemory;
 		VkImageView colorImageView;
 
 		// Todo: change this - change it to what??
@@ -158,8 +158,8 @@ namespace IceFairy {
 		bool isFrameBufferResized = false;
 
 		// Depth buffering
-		VkImage depthImage;
-		VkDeviceMemory depthImageMemory;
+		vk::Image depthImage;
+		vk::DeviceMemory depthImageMemory;
 		VkImageView depthImageView;
 
 		// Base Initialisation
@@ -192,7 +192,7 @@ namespace IceFairy {
 		void CreateTextureImage(void);
 		void CreateTextureImageView(void);
 		void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling,
-			vk::ImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+			vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::Image& image, vk::DeviceMemory& imageMemory);
 		VkCommandBuffer BeginSingleTimeCommands(void);
 		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
 		void TransitionImageLayout(VkImage image, vk::Format format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
@@ -222,7 +222,8 @@ namespace IceFairy {
 		void CreateSyncObjects(void);
 
 		// Buffers
-		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+		void CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
+			vk::Buffer& buffer, vk::DeviceMemory& bufferMemory);
 		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
 		// Depth buffering
@@ -234,7 +235,7 @@ namespace IceFairy {
 		// Vertex buffer
 		void CreateVertexBuffer(void);
 		void CreateIndexBuffer(void);
-		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+		uint32_t FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
 		void LoadModel(void);
 
 		// Uniform buffer
