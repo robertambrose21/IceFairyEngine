@@ -123,7 +123,7 @@ namespace IceFairy {
 
 		std::vector<VkFramebuffer> swapChainFramebuffers;
 
-		VkCommandPool commandPool;
+		vk::CommandPool commandPool;
 		std::vector<VkCommandBuffer> commandBuffers;
 
 		std::vector<Vertex> vertices;
