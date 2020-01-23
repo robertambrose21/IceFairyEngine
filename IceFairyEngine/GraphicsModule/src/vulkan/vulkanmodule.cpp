@@ -369,8 +369,8 @@ void VulkanModule::CreateLogicalDevice(void) {
 		throw VulkanException("failed to create logical device!");
 	}
 
-	vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
-	vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
+	graphicsQueue = device.getQueue(indices.graphicsFamily.value(), 0);
+	presentQueue = device.getQueue(indices.presentFamily.value(), 0);
 }
 
 void VulkanModule::CreateImageViews(void) {
@@ -420,7 +420,7 @@ void VulkanModule::CreateTextureImage(void) {
 		vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, textureImage, textureImageMemory);
 
-	TransitionImageLayout(textureImage, vk::Format::eR8G8B8A8Unorm, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
+	TransitionImageLayout(textureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, mipLevels);
 	CopyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 	// Transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
 
@@ -596,104 +596,82 @@ void VulkanModule::CreateImage(uint32_t width, uint32_t height, uint32_t mipLeve
 	device.bindImageMemory(image, imageMemory, 0);
 }
 
-VkCommandBuffer VulkanModule::BeginSingleTimeCommands(void) {
-	VkCommandBufferAllocateInfo allocInfo = {};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool = commandPool;
-	allocInfo.commandBufferCount = 1;
+vk::CommandBuffer VulkanModule::BeginSingleTimeCommands(void) {
+	vk::CommandBufferAllocateInfo allocInfo(commandPool, vk::CommandBufferLevel::ePrimary, 1);
 
-	VkCommandBuffer commandBuffer;
-	vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
-
-	VkCommandBufferBeginInfo beginInfo = {};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+	// TODO: Supposedly you allocate all buffers at the start?
+	vk::CommandBuffer commandBuffer = device.allocateCommandBuffers(allocInfo).at(0);
+	commandBuffer.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
 
 	return commandBuffer;
 }
 
-void VulkanModule::EndSingleTimeCommands(VkCommandBuffer commandBuffer) {
-	vkEndCommandBuffer(commandBuffer);
+void VulkanModule::EndSingleTimeCommands(vk::CommandBuffer commandBuffer) {
+	commandBuffer.end();
 
-	VkSubmitInfo submitInfo = {};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	vk::SubmitInfo submitInfo = {};
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &commandBuffer;
 
-	vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-	vkQueueWaitIdle(graphicsQueue);
+	graphicsQueue.submit(1, &submitInfo, nullptr);
+	graphicsQueue.waitIdle();
 
-	vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+	device.freeCommandBuffers(commandPool, 1, &commandBuffer);
 }
 
-void VulkanModule::TransitionImageLayout(VkImage image, vk::Format format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels) {
-	VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
+// TODO: Find out what the fuck is going on in this method
+void VulkanModule::TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t mipLevels) {
+	vk::CommandBuffer commandBuffer = BeginSingleTimeCommands();
 
-	VkImageMemoryBarrier barrier = {};
-	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	barrier.oldLayout = oldLayout;
-	barrier.newLayout = newLayout;
-	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.image = image;
-	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	barrier.subresourceRange.baseMipLevel = 0;
-	barrier.subresourceRange.levelCount = mipLevels;
-	barrier.subresourceRange.baseArrayLayer = 0;
-	barrier.subresourceRange.layerCount = 1;
-	barrier.srcAccessMask = 0; // TODO
-	barrier.dstAccessMask = 0; // TODO
+	vk::PipelineStageFlags sourceStage;
+	vk::PipelineStageFlags destinationStage;
+	vk::AccessFlags srcAccessMask, dstAccessMask;
+	vk::ImageAspectFlags subResourceRangeAspectMask;
 
-	VkPipelineStageFlags sourceStage;
-	VkPipelineStageFlags destinationStage;
-
-	if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
-		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+	if (newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal) {
+		subResourceRangeAspectMask = vk::ImageAspectFlagBits::eDepth;
 
 		if (HasStencilComponent(format)) {
-			barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+			subResourceRangeAspectMask |= vk::ImageAspectFlagBits::eStencil;
 		}
 	}
 	else {
-		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		subResourceRangeAspectMask = vk::ImageAspectFlagBits::eColor;
 	}
 
-	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
-		barrier.srcAccessMask = 0;
-		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal) {
+		dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+		sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
+		destinationStage = vk::PipelineStageFlagBits::eTransfer;
 	}
-	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+	else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal) {
+		srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+		dstAccessMask = vk::AccessFlagBits::eShaderRead;
 
-		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		sourceStage = vk::PipelineStageFlagBits::eTransfer;
+		destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
 	}
-	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
-		barrier.srcAccessMask = 0;
-		barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+	else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal) {
+		dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
 
-		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-		destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
+		destinationStage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
 	}
 	else {
 		throw VulkanException("unsupported layout transition!");
 	}
 
-	vkCmdPipelineBarrier(
-		commandBuffer,
+	vk::ImageSubresourceRange subResourceRange(subResourceRangeAspectMask, 0, mipLevels, 0, 1);
+
+	vk::ImageMemoryBarrier barrier(srcAccessMask, dstAccessMask, oldLayout, newLayout, VK_QUEUE_FAMILY_IGNORED,
+		VK_QUEUE_FAMILY_IGNORED, image, subResourceRange);
+
+	commandBuffer.pipelineBarrier(
 		sourceStage, destinationStage,
-		0,
+		{},
 		0, nullptr,
 		0, nullptr,
-		1, &barrier
-	);
+		1, &barrier);
 
 	EndSingleTimeCommands(commandBuffer);
 }
@@ -846,7 +824,7 @@ void VulkanModule::CreateRenderPass(void) {
 		&colorAttachmentRef, &colorAttachmentResolveRef, &depthAttachmentRef);
 
 	vk::SubpassDependency dependency(VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput,
-		vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::AccessFlagBits::eMemoryRead /* TODO: This was originally 0 in C version, look into this more */,
+		vk::PipelineStageFlagBits::eColorAttachmentOutput, {},
 		vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
 
 	// TODO: Catch globally
@@ -1412,7 +1390,7 @@ void VulkanModule::CreateDepthResources(void) {
 	CreateImage(swapChainExtent.width, swapChainExtent.height, 1, msaaSamples, depthFormat, vk::ImageTiling::eOptimal,
 		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, depthImage, depthImageMemory);
 	depthImageView = CreateImageView(depthImage, depthFormat, vk::ImageAspectFlagBits::eDepth, 1);
-	TransitionImageLayout(depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1);
+	TransitionImageLayout(depthImage, depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, 1);
 }
 
 vk::Format VulkanModule::FindSupportedFormat(const std::vector<vk::Format>& candidates, VkImageTiling tiling, vk::FormatFeatureFlags features) {
