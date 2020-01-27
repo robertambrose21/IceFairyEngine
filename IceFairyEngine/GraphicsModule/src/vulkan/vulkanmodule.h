@@ -110,7 +110,7 @@ namespace IceFairy {
 		vk::Queue graphicsQueue;
 		vk::Queue presentQueue;
 
-		VkSwapchainKHR swapChain;
+		vk::SwapchainKHR swapChain;
 		std::vector<vk::Image> swapChainImages;
 		vk::Format swapChainImageFormat;
 		VkExtent2D swapChainExtent;
@@ -118,13 +118,13 @@ namespace IceFairy {
 
 		vk::RenderPass renderPass;
 		vk::DescriptorSetLayout descriptorSetLayout;
-		VkPipelineLayout pipelineLayout;
-		VkPipeline graphicsPipeline;
+		vk::PipelineLayout pipelineLayout;
+		vk::Pipeline graphicsPipeline;
 
-		std::vector<VkFramebuffer> swapChainFramebuffers;
+		std::vector<vk::Framebuffer> swapChainFramebuffers;
 
 		vk::CommandPool commandPool;
-		std::vector<VkCommandBuffer> commandBuffers;
+		std::vector<vk::CommandBuffer> commandBuffers;
 
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
@@ -136,13 +136,13 @@ namespace IceFairy {
 		std::vector<vk::Buffer> uniformBuffers;
 		std::vector<vk::DeviceMemory> uniformBuffersMemory;
 
-		VkDescriptorPool descriptorPool;
-		std::vector<VkDescriptorSet> descriptorSets;
+		vk::DescriptorPool descriptorPool;
+		std::vector<vk::DescriptorSet> descriptorSets;
 
 		uint32_t mipLevels;
 		vk::Image textureImage;
 		vk::ImageView textureImageView;
-		VkSampler textureSampler;
+		vk::Sampler textureSampler;
 		vk::DeviceMemory textureImageMemory;
 		vk::SampleCountFlagBits msaaSamples = vk::SampleCountFlagBits::e1;
 		vk::Image colorImage;
@@ -150,9 +150,9 @@ namespace IceFairy {
 		vk::ImageView colorImageView;
 
 		// Todo: change this - change it to what??
-		std::vector<VkSemaphore> imageAvailableSemaphores;
-		std::vector<VkSemaphore> renderFinishedSemaphores;
-		std::vector<VkFence> inFlightFences;
+		std::vector<vk::Semaphore> imageAvailableSemaphores;
+		std::vector<vk::Semaphore> renderFinishedSemaphores;
+		std::vector<vk::Fence> inFlightFences;
 		size_t currentFrame = 0;
 
 		bool isFrameBufferResized = false;
@@ -197,7 +197,7 @@ namespace IceFairy {
 		void EndSingleTimeCommands(vk::CommandBuffer commandBuffer);
 		void TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t mipLevels);
 		void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-		void GenerateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
+		void GenerateMipmaps(vk::Image image, vk::Format imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 		vk::SampleCountFlagBits GetMaxUsableSampleCount(void);
 		void CreateColorResources(void);
 
