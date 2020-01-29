@@ -201,7 +201,7 @@ void VulkanModule::InitialiseVulkanInstance(void) {
 			layerNames = validationLayers.data();
 		}
 
-		vk::ApplicationInfo appInfo("Vulkan Demo", 1, "IceFairyEngine", 0.1, VK_API_VERSION_1_1);
+		vk::ApplicationInfo appInfo("Vulkan Demo", 0, "IceFairyEngine", 0, VK_API_VERSION_1_1);
 		vk::InstanceCreateInfo createInfo({}, &appInfo, numLayers, layerNames, static_cast<uint32_t>(extensions.size()), extensions.data());
 
 		instance = vk::createInstance(createInfo);;
@@ -381,7 +381,7 @@ void VulkanModule::CreateImageViews(void) {
 	}
 }
 
-vk::ImageView VulkanModule::CreateImageView(VkImage image, vk::Format format, vk::ImageAspectFlags aspectFlags, uint32_t mipLevels) {
+vk::ImageView VulkanModule::CreateImageView(vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags, uint32_t mipLevels) {
 	vk::ImageViewCreateInfo viewInfo({}, image, vk::ImageViewType::e2D, format, {}, vk::ImageSubresourceRange(aspectFlags, 0, mipLevels, 0, 1));
 
 	// TODO: Catch globally
@@ -652,34 +652,13 @@ void VulkanModule::TransitionImageLayout(vk::Image image, vk::Format format, vk:
 	EndSingleTimeCommands(commandBuffer);
 }
 
-void VulkanModule::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
-	VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
+void VulkanModule::CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height) {
+	vk::CommandBuffer commandBuffer = BeginSingleTimeCommands();
 
-	VkBufferImageCopy region = {};
-	region.bufferOffset = 0;
-	region.bufferRowLength = 0;
-	region.bufferImageHeight = 0;
+	vk::BufferImageCopy region(0, 0, 0, vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
+		{ 0, 0, 0 }, { width, height, 1 });
 
-	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	region.imageSubresource.mipLevel = 0;
-	region.imageSubresource.baseArrayLayer = 0;
-	region.imageSubresource.layerCount = 1;
-
-	region.imageOffset = { 0, 0, 0 };
-	region.imageExtent = {
-		width,
-		height,
-		1
-	};
-
-	vkCmdCopyBufferToImage(
-		commandBuffer,
-		buffer,
-		image,
-		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		1,
-		&region
-	);
+	commandBuffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, { region });
 
 	EndSingleTimeCommands(commandBuffer);
 }
@@ -874,12 +853,10 @@ void VulkanModule::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
 	device.bindBufferMemory(buffer, bufferMemory, 0);
 }
 
-void VulkanModule::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
-	VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
+void VulkanModule::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size) {
+	vk::CommandBuffer commandBuffer = BeginSingleTimeCommands();
 
-	VkBufferCopy copyRegion = {};
-	copyRegion.size = size;
-	vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+	commandBuffer.copyBuffer(srcBuffer, dstBuffer, { vk::BufferCopy(0, 0, size) });
 
 	EndSingleTimeCommands(commandBuffer);
 }
@@ -1009,7 +986,6 @@ void VulkanModule::CreateCommandBuffers(void) {
 		commandBuffers[i].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { descriptorSets[i] }, nullptr);
 
 		commandBuffers[i].drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-
 
 		commandBuffers[i].endRenderPass();
 
@@ -1145,7 +1121,6 @@ void VulkanModule::CleanupSwapChain(void) {
 	for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
 		vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
 	}
-
 
 	device.freeCommandBuffers(commandPool, commandBuffers);
 
@@ -1317,14 +1292,14 @@ void VulkanModule::CreateDepthResources(void) {
 	TransitionImageLayout(depthImage, depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, 1);
 }
 
-vk::Format VulkanModule::FindSupportedFormat(const std::vector<vk::Format>& candidates, VkImageTiling tiling, vk::FormatFeatureFlags features) {
+vk::Format VulkanModule::FindSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features) {
 	for (vk::Format format : candidates) {
 		vk::FormatProperties props = physicalDevice.getFormatProperties(format);
 
-		if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+		if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
 			return format;
 		}
-		else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+		else if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features) {
 			return format;
 		}
 	}
@@ -1335,8 +1310,7 @@ vk::Format VulkanModule::FindSupportedFormat(const std::vector<vk::Format>& cand
 vk::Format VulkanModule::FindDepthFormat(void) {
 	return FindSupportedFormat(
 		{ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint },
-		VK_IMAGE_TILING_OPTIMAL,
-		vk::FormatFeatureFlagBits::eDepthStencilAttachment
+		vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment
 	);
 }
 

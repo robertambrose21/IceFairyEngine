@@ -113,7 +113,7 @@ namespace IceFairy {
 		vk::SwapchainKHR swapChain;
 		std::vector<vk::Image> swapChainImages;
 		vk::Format swapChainImageFormat;
-		VkExtent2D swapChainExtent;
+		vk::Extent2D swapChainExtent;
 		std::vector<vk::ImageView> swapChainImageViews;
 
 		vk::RenderPass renderPass;
@@ -188,7 +188,7 @@ namespace IceFairy {
 
 		// Image views
 		void CreateImageViews(void);
-		vk::ImageView CreateImageView(VkImage image, vk::Format format, vk::ImageAspectFlags aspectFlags, uint32_t mipLevels);
+		vk::ImageView CreateImageView(vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags, uint32_t mipLevels);
 		void CreateTextureImage(void);
 		void CreateTextureImageView(void);
 		void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling,
@@ -196,7 +196,7 @@ namespace IceFairy {
 		vk::CommandBuffer BeginSingleTimeCommands(void);
 		void EndSingleTimeCommands(vk::CommandBuffer commandBuffer);
 		void TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t mipLevels);
-		void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+		void CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height);
 		void GenerateMipmaps(vk::Image image, vk::Format imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 		vk::SampleCountFlagBits GetMaxUsableSampleCount(void);
 		void CreateColorResources(void);
@@ -224,11 +224,11 @@ namespace IceFairy {
 		// Buffers
 		void CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
 			vk::Buffer& buffer, vk::DeviceMemory& bufferMemory);
-		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+		void CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
 
 		// Depth buffering
 		void CreateDepthResources(void);
-		vk::Format FindSupportedFormat(const std::vector<vk::Format>& candidates, VkImageTiling tiling, vk::FormatFeatureFlags features);
+		vk::Format FindSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features);
 		vk::Format FindDepthFormat(void);
 		bool HasStencilComponent(vk::Format format);
 
