@@ -1,6 +1,9 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 
+#define VMA_IMPLEMENTATION
+#include "memory-allocator/vk_mem_alloc.hpp"
+
 #include "vulkanmodule.h"
 
 using namespace IceFairy;
@@ -25,7 +28,12 @@ const std::vector<Vertex> vertices = {
 	{{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
 };
 
-const std::vector<uint16_t> indices = {
+//const std::vector<uint16_t> indices = {
+//	0, 1, 2, 2, 3, 0,
+//	4, 5, 6, 6, 7, 4
+//};
+
+const std::vector<uint32_t> indices = {
 	0, 1, 2, 2, 3, 0,
 	4, 5, 6, 6, 7, 4
 };
@@ -98,6 +106,7 @@ bool VulkanModule::Initialise(void) {
 	CreateSurface();
 	PickPhysicalDevice();
 	CreateLogicalDevice();
+	CreateMemoryAllocator();
 	CreateSwapChain();
 	CreateImageViews();
 	CreateRenderPass();
@@ -129,16 +138,12 @@ void VulkanModule::CleanUp(void) {
 	vkDestroySampler(device, textureSampler, nullptr);
 	vkDestroyImageView(device, textureImageView, nullptr);
 
-	vkDestroyImage(device, textureImage, nullptr);
-	vkFreeMemory(device, textureImageMemory, nullptr);
+	allocator.destroyImage(textureImage, textureImageMemory);
 
 	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
-	vkDestroyBuffer(device, indexBuffer, nullptr);
-	vkFreeMemory(device, indexBufferMemory, nullptr);
-
-	vkDestroyBuffer(device, vertexBuffer, nullptr);
-	vkFreeMemory(device, vertexBufferMemory, nullptr);
+	allocator.destroyBuffer(indexBuffer, indexBufferMemory);
+	allocator.destroyBuffer(vertexBuffer, vertexBufferMemory);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
@@ -147,6 +152,8 @@ void VulkanModule::CleanUp(void) {
 	}
 
 	vkDestroyCommandPool(device, commandPool, nullptr);
+
+	vmaDestroyAllocator(allocator);
 
 	vkDestroyDevice(device, nullptr);
 
@@ -373,6 +380,10 @@ void VulkanModule::CreateLogicalDevice(void) {
 	presentQueue = device.getQueue(indices.presentFamily.value(), 0);
 }
 
+void VulkanModule::CreateMemoryAllocator(void) {
+	allocator = vma::createAllocator(vma::AllocatorCreateInfo({}, physicalDevice, device));
+}
+
 void VulkanModule::CreateImageViews(void) {
 	swapChainImageViews.resize(swapChainImages.size());
 
@@ -403,15 +414,14 @@ void VulkanModule::CreateTextureImage(void) {
 		throw VulkanException("failed to load texture image!");
 	}
 
-	vk::Buffer stagingBuffer;
-	vk::DeviceMemory stagingBufferMemory;
+	auto [stagingBuffer, stagingAllocation] = CreateBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible |
+		vk::MemoryPropertyFlagBits::eHostCoherent);
 
-	CreateBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible |
-		vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
-
-	void* data = device.mapMemory(stagingBufferMemory, 0, imageSize);
+	void* data;
+	allocator.mapMemory(stagingAllocation, &data);
 	memcpy(data, pixels, static_cast<size_t>(imageSize));
-	device.unmapMemory(stagingBufferMemory);
+	allocator.unmapMemory(stagingAllocation);
+	allocator.flushAllocation(stagingAllocation, 0, imageSize);
 
 	stbi_image_free(pixels);
 
@@ -425,8 +435,7 @@ void VulkanModule::CreateTextureImage(void) {
 
 	GenerateMipmaps(textureImage, vk::Format::eR8G8B8A8Unorm, texWidth, texHeight, mipLevels);
 
-	device.destroyBuffer(stagingBuffer, nullptr);
-	device.freeMemory(stagingBufferMemory, nullptr);
+	allocator.destroyBuffer(stagingBuffer, stagingAllocation);
 }
 
 void VulkanModule::GenerateMipmaps(vk::Image image, vk::Format imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels) {
@@ -545,7 +554,7 @@ void VulkanModule::CreateColorResources(void) {
 }
 
 void VulkanModule::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling,
-		vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::Image& image, vk::DeviceMemory& imageMemory) {
+		vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::Image& image, vma::Allocation& imageMemory) {
 	vk::ImageCreateInfo imageInfo({}, vk::ImageType::e2D, format, vk::Extent3D(width, height, 1), mipLevels, 1,
 		numSamples, tiling, usage, vk::SharingMode::eExclusive, 0, nullptr, vk::ImageLayout::eUndefined);
 
@@ -559,17 +568,15 @@ void VulkanModule::CreateImage(uint32_t width, uint32_t height, uint32_t mipLeve
 
 	vk::MemoryRequirements memRequirements = device.getImageMemoryRequirements(image);
 
-	vk::MemoryAllocateInfo allocInfo(memRequirements.size, FindMemoryType(memRequirements.memoryTypeBits, properties));
-
 	// TODO: Catch globally
 	try {
-		imageMemory = device.allocateMemory(allocInfo);
+		imageMemory = allocator.allocateMemory(memRequirements, vma::AllocationCreateInfo({}, vma::MemoryUsage::eGpuOnly, properties));
 	}
 	catch (std::runtime_error err) {
 		throw VulkanException("failed to allocate image memory!");
 	}
 
-	device.bindImageMemory(image, imageMemory, 0);
+	allocator.bindImageMemory(imageMemory, image);
 }
 
 vk::CommandBuffer VulkanModule::BeginSingleTimeCommands(void) {
@@ -685,12 +692,11 @@ void VulkanModule::CreateUniformBuffers(void) {
 	vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
 
 	uniformBuffers.resize(swapChainImages.size());
-	uniformBuffersMemory.resize(swapChainImages.size());
 
 	// TODO: Proper for
 	for (size_t i = 0; i < swapChainImages.size(); i++) {
-		CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eHostVisible
-			| vk::MemoryPropertyFlagBits::eHostCoherent, uniformBuffers[i], uniformBuffersMemory[i]);
+		uniformBuffers[i] = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eHostVisible
+			| vk::MemoryPropertyFlagBits::eHostCoherent);
 	}
 }
 
@@ -826,31 +832,20 @@ void VulkanModule::CreateCommandPool(void) {
 	}
 }
 
-void VulkanModule::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
-	vk::Buffer& buffer, vk::DeviceMemory& bufferMemory)
+std::pair<vk::Buffer, vma::Allocation> VulkanModule::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
+	vk::MemoryPropertyFlags properties)
 {
 	vk::BufferCreateInfo bufferInfo({}, size, usage, vk::SharingMode::eExclusive);
 
-	// TODO: Sort out
-	try {
-		buffer = device.createBuffer(bufferInfo);
-	}
-	catch (std::runtime_error err) {
-		throw VulkanException("failed to create buffer!");
-	}
-
-	vk::MemoryRequirements memRequirements = device.getBufferMemoryRequirements(buffer);
-	vk::MemoryAllocateInfo allocInfo(memRequirements.size, FindMemoryType(memRequirements.memoryTypeBits, properties));
+	vma::AllocationCreateInfo allocInfo({}, vma::MemoryUsage::eGpuOnly, properties);
 
 	// TODO: Sort out
 	try {
-		bufferMemory = device.allocateMemory(allocInfo);
+		return allocator.createBuffer(bufferInfo, allocInfo);
 	}
 	catch (std::runtime_error err) {
 		throw VulkanException("failed to allocate buffer memory!");
 	}
-
-	device.bindBufferMemory(buffer, bufferMemory, 0);
 }
 
 void VulkanModule::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size) {
@@ -864,45 +859,46 @@ void VulkanModule::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::De
 void VulkanModule::CreateVertexBuffer(void) {
 	vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
-	vk::Buffer stagingBuffer;
-	vk::DeviceMemory stagingBufferMemory;
-	CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible |
-		vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
+	auto [stagingBuffer, stagingAllocation] = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 
-	void* data = device.mapMemory(stagingBufferMemory, 0, bufferSize);
+	void* data;
+	allocator.mapMemory(stagingAllocation, &data);
 	memcpy(data, vertices.data(), (size_t)bufferSize);
-	device.unmapMemory(stagingBufferMemory);
+	allocator.unmapMemory(stagingAllocation);
+	// TODO: Apparently we have to do this? Doesn't seem to make a difference - find out why. Check VMA docs
+	allocator.flushAllocation(stagingAllocation, 0, bufferSize);
 
-	CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, vertexBuffer, vertexBufferMemory);
+	std::tie(vertexBuffer, vertexBufferMemory) = CreateBuffer(bufferSize,vk::BufferUsageFlagBits::eTransferDst |
+		vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 	CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
 
-	device.destroyBuffer(stagingBuffer, nullptr);
-	device.freeMemory(stagingBufferMemory, nullptr);
+	allocator.destroyBuffer(stagingBuffer, stagingAllocation);
 }
 
 void VulkanModule::CreateIndexBuffer(void) {
 	vk::DeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
-	vk::Buffer stagingBuffer;
-	vk::DeviceMemory stagingBufferMemory;
-	CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible |
-		vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
+	auto [stagingBuffer, stagingAllocation] = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible |
+		vk::MemoryPropertyFlagBits::eHostCoherent);
 
-	void* data = device.mapMemory(stagingBufferMemory, 0, bufferSize);
-	memcpy(data, indices.data(), (size_t) bufferSize);
-	device.unmapMemory(stagingBufferMemory);
+	void* data;
+	allocator.mapMemory(stagingAllocation, &data);
+	memcpy(data, indices.data(), (size_t)bufferSize);
+	allocator.unmapMemory(stagingAllocation);
+	allocator.flushAllocation(stagingAllocation, 0, bufferSize);
 
-	CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, indexBuffer, indexBufferMemory);
+	std::tie(indexBuffer, indexBufferMemory) = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
+		vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 	CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
 
-	device.destroyBuffer(stagingBuffer, nullptr);
-	device.freeMemory(stagingBufferMemory, nullptr);
+	allocator.destroyBuffer(stagingBuffer, stagingAllocation);
 }
 
+// TODO: Do we need this anymore? VMA seems to handle it. Might want to look into the docs and vulkan tutorial to find out
+// exactly what's going on here.
 uint32_t VulkanModule::FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) {
 	vk::PhysicalDeviceMemoryProperties memProperties = physicalDevice.getMemoryProperties();
 
@@ -916,8 +912,9 @@ uint32_t VulkanModule::FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFla
 
 }
 
+// TODO: Temporarily disabled
 void VulkanModule::LoadModel(void) {
-	tinyobj::attrib_t attrib;
+	/*tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
 	std::string warn, err;
@@ -952,7 +949,7 @@ void VulkanModule::LoadModel(void) {
 
 			indices.push_back(uniqueVertices[vertex]);
 		}
-	}
+	}*/
 }
 
 void VulkanModule::CreateCommandBuffers(void) {
@@ -1111,12 +1108,10 @@ vk::Extent2D VulkanModule::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR & c
 
 void VulkanModule::CleanupSwapChain(void) {
 	vkDestroyImageView(device, colorImageView, nullptr);
-	vkDestroyImage(device, colorImage, nullptr);
-	vkFreeMemory(device, colorImageMemory, nullptr);
+	allocator.destroyImage(colorImage, colorImageMemory);
 
 	vkDestroyImageView(device, depthImageView, nullptr);
-	vkDestroyImage(device, depthImage, nullptr);
-	vkFreeMemory(device, depthImageMemory, nullptr);
+	allocator.destroyImage(depthImage, depthImageMemory);
 
 	for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
 		vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
@@ -1135,8 +1130,7 @@ void VulkanModule::CleanupSwapChain(void) {
 	vkDestroySwapchainKHR(device, swapChain, nullptr);
 
 	for (size_t i = 0; i < swapChainImages.size(); i++) {
-		vkDestroyBuffer(device, uniformBuffers[i], nullptr);
-		vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
+		allocator.destroyBuffer(uniformBuffers[i].first, uniformBuffers[i].second);
 	}
 
 	vkDestroyDescriptorPool(device, descriptorPool, nullptr);
@@ -1177,7 +1171,6 @@ void VulkanModule::RunMainLoop(void) {
 }
 
 void VulkanModule::DrawFrame(void) {
-
 	device.waitForFences({ inFlightFences[currentFrame] }, VK_TRUE, std::numeric_limits<uint64_t>::max());
 
 	uint32_t imageIndex;
@@ -1192,7 +1185,6 @@ void VulkanModule::DrawFrame(void) {
 	}
 
 	UpdateUniformBuffer(imageIndex);
-
 
 	vk::Semaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
 	vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
@@ -1240,9 +1232,10 @@ void VulkanModule::UpdateUniformBuffer(uint32_t currentImage) {
 	this, then the image will be rendered upside down.*/
 	ubo.proj[1][1] *= -1;
 
-	void* data = device.mapMemory(uniformBuffersMemory[currentImage], 0, sizeof(ubo));
+	void* data;
+	allocator.mapMemory(uniformBuffers[currentImage].second, &data);
 	memcpy(data, &ubo, sizeof(ubo));
-	device.unmapMemory(uniformBuffersMemory[currentImage]);
+	allocator.unmapMemory(uniformBuffers[currentImage].second);
 }
 
 void VulkanModule::CreateDescriptorPool(void) {
@@ -1270,7 +1263,7 @@ void VulkanModule::CreateDescriptorSets(void) {
 	}
 
 	for (size_t i = 0; i < swapChainImages.size(); i++) {
-		vk::DescriptorBufferInfo bufferInfo(uniformBuffers[i], 0, sizeof(UniformBufferObject));
+		vk::DescriptorBufferInfo bufferInfo(uniformBuffers[i].first, 0, sizeof(UniformBufferObject));
 
 		vk::DescriptorImageInfo imageInfo(textureSampler, textureImageView, vk::ImageLayout::eShaderReadOnlyOptimal);
 

@@ -11,6 +11,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
+#include "memory-allocator/vk_mem_alloc.hpp"
 #include "vulkan/vulkan.hpp"
 
 #include <string>
@@ -126,15 +127,12 @@ namespace IceFairy {
 		vk::CommandPool commandPool;
 		std::vector<vk::CommandBuffer> commandBuffers;
 
-		std::vector<Vertex> vertices;
-		std::vector<uint32_t> indices;
 		vk::Buffer vertexBuffer;
-		vk::DeviceMemory vertexBufferMemory;
+		vma::Allocation vertexBufferMemory;
 		vk::Buffer indexBuffer;
-		vk::DeviceMemory indexBufferMemory;
+		vma::Allocation indexBufferMemory;
 
-		std::vector<vk::Buffer> uniformBuffers;
-		std::vector<vk::DeviceMemory> uniformBuffersMemory;
+		std::vector<std::pair<vk::Buffer, vma::Allocation>> uniformBuffers;
 
 		vk::DescriptorPool descriptorPool;
 		std::vector<vk::DescriptorSet> descriptorSets;
@@ -143,10 +141,10 @@ namespace IceFairy {
 		vk::Image textureImage;
 		vk::ImageView textureImageView;
 		vk::Sampler textureSampler;
-		vk::DeviceMemory textureImageMemory;
+		vma::Allocation textureImageMemory;
 		vk::SampleCountFlagBits msaaSamples = vk::SampleCountFlagBits::e1;
 		vk::Image colorImage;
-		vk::DeviceMemory colorImageMemory;
+		vma::Allocation colorImageMemory;
 		vk::ImageView colorImageView;
 
 		// Todo: change this - change it to what??
@@ -159,8 +157,11 @@ namespace IceFairy {
 
 		// Depth buffering
 		vk::Image depthImage;
-		vk::DeviceMemory depthImageMemory;
+		vma::Allocation depthImageMemory;
 		vk::ImageView depthImageView;
+
+		// Memory Allocator
+		vma::Allocator allocator;
 
 		// Base Initialisation
 		void InitialiseWindow(void);
@@ -178,6 +179,9 @@ namespace IceFairy {
 		// Logical Device
 		void CreateLogicalDevice(void);
 
+		// Memory Allocator
+		void CreateMemoryAllocator(void);
+
 		// Swap chain
 		SwapChainSupportDetails QuerySwapChainSupport(vk::PhysicalDevice device);
 		vk::SurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats);
@@ -192,7 +196,7 @@ namespace IceFairy {
 		void CreateTextureImage(void);
 		void CreateTextureImageView(void);
 		void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling,
-			vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::Image& image, vk::DeviceMemory& imageMemory);
+			vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::Image& image, vma::Allocation& imageMemory);
 		vk::CommandBuffer BeginSingleTimeCommands(void);
 		void EndSingleTimeCommands(vk::CommandBuffer commandBuffer);
 		void TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t mipLevels);
@@ -222,8 +226,7 @@ namespace IceFairy {
 		void CreateSyncObjects(void);
 
 		// Buffers
-		void CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
-			vk::Buffer& buffer, vk::DeviceMemory& bufferMemory);
+		std::pair<vk::Buffer, vma::Allocation> CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties);
 		void CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
 
 		// Depth buffering
@@ -253,6 +256,7 @@ namespace IceFairy {
 
 		void SetupDebugCallback(void);
 
+		// TODO: convert to hpp
 		static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 			VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 			void* pUserData)
