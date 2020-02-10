@@ -16,28 +16,6 @@ const std::vector<const char*> deviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-const std::vector<Vertex> vertices = {
-	{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-	{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-	{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-	{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-
-	{{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-	{{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-	{{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-	{{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
-};
-
-//const std::vector<uint16_t> indices = {
-//	0, 1, 2, 2, 3, 0,
-//	4, 5, 6, 6, 7, 4
-//};
-
-const std::vector<uint32_t> indices = {
-	0, 1, 2, 2, 3, 0,
-	4, 5, 6, 6, 7, 4
-};
-
 const int WIDTH = 800;
 const int HEIGHT = 600;
 
@@ -120,8 +98,12 @@ bool VulkanModule::Initialise(void) {
 	CreateTextureImageView();
 	CreateTextureSampler();
 	LoadModel();
-	CreateVertexBuffer();
-	CreateIndexBuffer();
+
+	for (auto& vertexObject : vertexObjects) {
+		CreateVertexBuffer(vertexObject);
+		CreateIndexBuffer(vertexObject);
+	}
+
 	CreateUniformBuffers();
 	CreateDescriptorPool();
 	CreateDescriptorSets();
@@ -142,8 +124,9 @@ void VulkanModule::CleanUp(void) {
 
 	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
-	allocator.destroyBuffer(indexBuffer, indexBufferMemory);
-	allocator.destroyBuffer(vertexBuffer, vertexBufferMemory);
+	for (auto& vertexObject : vertexObjects) {
+		vertexObject.CleanUp(allocator);
+	}
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
@@ -186,6 +169,10 @@ void VulkanModule::InitialiseWindow(void) {
 	window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
 	glfwSetWindowUserPointer(window, this);
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+}
+
+void VulkanModule::AddVertexObject(const VertexObject& vertexObject) {
+	vertexObjects.push_back(vertexObject);
 }
 
 void VulkanModule::SetIsFrameBufferResized(const bool& value) {
@@ -700,6 +687,7 @@ void VulkanModule::CreateUniformBuffers(void) {
 	}
 }
 
+// Binds shaders and position/colour/texture coords
 void VulkanModule::CreateGraphicsPipeline(void) {
 	ShaderModule module(device);
 
@@ -856,43 +844,48 @@ void VulkanModule::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::De
 	EndSingleTimeCommands(commandBuffer);
 }
 
-void VulkanModule::CreateVertexBuffer(void) {
-	vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+// TODO: Eventually combine vertex and index buffers into same buffer - see if we can combine multiple buffers too?
+void VulkanModule::CreateVertexBuffer(VertexObject& vertexObject) {
+	vk::DeviceSize bufferSize = sizeof(vertexObject.GetVertices()[0]) * vertexObject.GetVertices().size();
 
 	auto [stagingBuffer, stagingAllocation] = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 
 	void* data;
 	allocator.mapMemory(stagingAllocation, &data);
-	memcpy(data, vertices.data(), (size_t)bufferSize);
+	memcpy(data, vertexObject.GetVertices().data(), (size_t)bufferSize);
 	allocator.unmapMemory(stagingAllocation);
 	// TODO: Apparently we have to do this? Doesn't seem to make a difference - find out why. Check VMA docs
 	allocator.flushAllocation(stagingAllocation, 0, bufferSize);
 
-	std::tie(vertexBuffer, vertexBufferMemory) = CreateBuffer(bufferSize,vk::BufferUsageFlagBits::eTransferDst |
+	auto& bufferAllocation = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst |
 		vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-	CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+	vertexObject.AssignVertexBuffer(bufferAllocation);
+
+	CopyBuffer(stagingBuffer, vertexObject.GetVertexBuffer(), bufferSize);
 
 	allocator.destroyBuffer(stagingBuffer, stagingAllocation);
 }
 
-void VulkanModule::CreateIndexBuffer(void) {
-	vk::DeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+void VulkanModule::CreateIndexBuffer(VertexObject& vertexObject) {
+	vk::DeviceSize bufferSize = sizeof(vertexObject.GetIndices()[0]) * vertexObject.GetIndices().size();
 
 	auto [stagingBuffer, stagingAllocation] = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible |
 		vk::MemoryPropertyFlagBits::eHostCoherent);
 
 	void* data;
 	allocator.mapMemory(stagingAllocation, &data);
-	memcpy(data, indices.data(), (size_t)bufferSize);
+	memcpy(data, vertexObject.GetIndices().data(), (size_t)bufferSize);
 	allocator.unmapMemory(stagingAllocation);
 	allocator.flushAllocation(stagingAllocation, 0, bufferSize);
 
-	std::tie(indexBuffer, indexBufferMemory) = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
+	auto& bufferAllocation = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
 		vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-	CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
+	vertexObject.AssignIndexBuffer(bufferAllocation);
+
+	CopyBuffer(stagingBuffer, vertexObject.GetIndexBuffer(), bufferSize);
 
 	allocator.destroyBuffer(stagingBuffer, stagingAllocation);
 }
@@ -978,11 +971,16 @@ void VulkanModule::CreateCommandBuffers(void) {
 		commandBuffers[i].beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 
 		commandBuffers[i].bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
-		commandBuffers[i].bindVertexBuffers(0, { vertexBuffer }, { 0 });
-		commandBuffers[i].bindIndexBuffer(indexBuffer, 0, vk::IndexType::eUint32);
-		commandBuffers[i].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { descriptorSets[i] }, nullptr);
 
-		commandBuffers[i].drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+		for (auto& vertexObject : vertexObjects) {
+			// Bind vertices and indices - https://www.reddit.com/r/vulkan/comments/69qqe0/variable_number_of_vertex_buffers/
+			commandBuffers[i].bindVertexBuffers(0, { vertexObject.GetVertexBuffer() }, { 0 });
+			commandBuffers[i].bindIndexBuffer(vertexObject.GetIndexBuffer(), 0, vk::IndexType::eUint32);
+			// Bind 'descriptor sets' textures etc?
+			commandBuffers[i].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { descriptorSets[i] }, nullptr);
+
+			commandBuffers[i].drawIndexed(static_cast<uint32_t>(vertexObject.GetIndices().size()), 1, 0, 0, 0);
+		}
 
 		commandBuffers[i].endRenderPass();
 

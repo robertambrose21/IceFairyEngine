@@ -3,13 +3,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/hash.hpp>
+#include "glm_include.h"
 
 #include "memory-allocator/vk_mem_alloc.hpp"
 #include "vulkan/vulkan.hpp"
@@ -30,31 +24,9 @@
 // Consider moving to cpp file too
 #include "../stbi/stb_image.h"
 
+#include "vertexobject.h"
+
 namespace IceFairy {
-
-	typedef struct _vertex {
-		glm::vec3 pos;
-		glm::vec3 color;
-		glm::vec2 texCoord;
-
-		static vk::VertexInputBindingDescription getBindingDescription() {
-			return vk::VertexInputBindingDescription(0, sizeof(Vertex), vk::VertexInputRate::eVertex);
-		}
-
-		static std::array<vk::VertexInputAttributeDescription, 3> getAttributeDescriptions() {
-			std::array<vk::VertexInputAttributeDescription, 3> attributeDescriptions = {};
-
-			attributeDescriptions[0] = vk::VertexInputAttributeDescription(0, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, pos));
-			attributeDescriptions[1] = vk::VertexInputAttributeDescription(1, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, color));
-			attributeDescriptions[2] = vk::VertexInputAttributeDescription(2, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, texCoord));
-
-			return attributeDescriptions;
-		}
-
-		bool operator==(const _vertex& other) const {
-			return pos == other.pos && color == other.color && texCoord == other.texCoord;
-		}
-	} Vertex;
 
 	class VulkanModule : public Module {
 	public:
@@ -65,6 +37,8 @@ namespace IceFairy {
 		void CleanUp(void);
 
 		void StartMainLoop(void);
+
+		void AddVertexObject(const VertexObject& vertexObject);
 
 		// TODO: Rethink how to do this - we don't want this public
 		void SetIsFrameBufferResized(const bool& value);
@@ -127,10 +101,7 @@ namespace IceFairy {
 		vk::CommandPool commandPool;
 		std::vector<vk::CommandBuffer> commandBuffers;
 
-		vk::Buffer vertexBuffer;
-		vma::Allocation vertexBufferMemory;
-		vk::Buffer indexBuffer;
-		vma::Allocation indexBufferMemory;
+		std::vector<VertexObject> vertexObjects;
 
 		std::vector<std::pair<vk::Buffer, vma::Allocation>> uniformBuffers;
 
@@ -236,8 +207,8 @@ namespace IceFairy {
 		bool HasStencilComponent(vk::Format format);
 
 		// Vertex buffer
-		void CreateVertexBuffer(void);
-		void CreateIndexBuffer(void);
+		void CreateVertexBuffer(VertexObject& vertexObject);
+		void CreateIndexBuffer(VertexObject& vertexObject);
 		uint32_t FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
 		void LoadModel(void);
 
@@ -288,14 +259,4 @@ namespace IceFairy {
 		}
 	};
 
-}
-
-namespace std {
-	template<> struct hash<IceFairy::Vertex> {
-		size_t operator()(IceFairy::Vertex const& vertex) const {
-			return ((hash<glm::vec3>()(vertex.pos) ^
-				(hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
-				(hash<glm::vec2>()(vertex.texCoord) << 1);
-		}
-	};
 }

@@ -10,6 +10,7 @@
 #include <cstdlib>
 
 #include "vulkan/vulkanmodule.h"
+#include "vulkan/vertexobject.h"
 #include "core/application.h"
 
 #define ICE_FAIRY_TREAT_VERBOSE_AS_DEBUG true
@@ -26,6 +27,45 @@ public:
 
 	void Initialise(void) {
 		module = AddModule<IceFairy::VulkanModule>("VulkanModule");
+
+		module->AddVertexObject(
+			IceFairy::VertexObject(
+				{
+					0, 1, 2, 2, 3, 0,
+					4, 5, 6, 6, 7, 4
+				},
+				{
+					{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+					{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+					{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+					{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+
+					{{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+					{{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+					{{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+					{{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
+				}
+			)
+		);
+		module->AddVertexObject(
+			IceFairy::VertexObject(
+				{
+					0, 1, 2, 2, 3, 0,
+					4, 5, 6, 6, 7, 4
+				},
+				{
+					{{-0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+					{{0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+					{{0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+					{{-0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+
+					{{-0.5f, -0.5f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+					{{0.5f, -0.5f, -1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+					{{0.5f, 0.5f, -1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+					{{-0.5f, 0.5f, -1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
+				}
+			)
+		);
 
 		Application::Initialise();
 	}

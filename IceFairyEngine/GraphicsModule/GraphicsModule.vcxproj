@@ -33,6 +33,7 @@
     <ClCompile Include="src\stbi\stb_image.c" />
     <ClCompile Include="src\vertexobject.cpp" />
     <ClCompile Include="src\vulkan\shadermodule.cpp" />
+    <ClCompile Include="src\vulkan\vertexobject.cpp" />
     <ClCompile Include="src\vulkan\vulkanmodule.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -53,7 +54,9 @@
     <ClInclude Include="src\shapes\cubeobject.h" />
     <ClInclude Include="src\stbi\stb_image.h" />
     <ClInclude Include="src\vertexobject.h" />
+    <ClInclude Include="src\vulkan\glm_include.h" />
     <ClInclude Include="src\vulkan\shadermodule.h" />
+    <ClInclude Include="src\vulkan\vertexobject.h" />
     <ClInclude Include="src\vulkan\vulkanexception.h" />
     <ClInclude Include="src\vulkan\vulkanmodule.h" />
   </ItemGroup>
