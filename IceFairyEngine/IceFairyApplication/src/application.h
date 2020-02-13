@@ -1,8 +1,7 @@
-#ifndef __ice_fairy_application_h__
-#define __ice_fairy_application_h__
+#pragma once
 
-#include "module.h"
-#include "utilities\logger.h"
+#include "core\module.h"
+#include "core\utilities\logger.h"
 
 namespace IceFairy {
     /*! \brief Abstract application class. Baseline for the main app entry point.
@@ -88,5 +87,3 @@ namespace IceFairy {
         char**              argv;
     };
 }
-
-#endif /* __ice_fairy_application_h__ */

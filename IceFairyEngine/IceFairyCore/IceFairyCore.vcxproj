@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\core\application.h" />
     <ClInclude Include="src\core\camera.h" />
     <ClInclude Include="src\core\module.h" />
     <ClInclude Include="src\core\utilities\icexception.h" />
@@ -30,7 +29,6 @@
     <ClInclude Include="src\math\vector.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\core\application.cpp" />
     <ClCompile Include="src\core\camera.cpp" />
     <ClCompile Include="src\core\module.cpp" />
     <ClCompile Include="src\core\utilities\icexception.cpp" />

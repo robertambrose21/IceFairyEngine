@@ -53,7 +53,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\Dependencies\googletest-master\googletest\include;../IceFairyEngine/src;..\..\Dependencies\googletest-master\googlemock\include;..\..\Dependencies\glfw-3.1.2.bin.WIN32\include;..\..\Dependencies\glew32\glew-1.9.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Dependencies\googletest-master\googletest\include;../IceFairyCore/src;..\..\Dependencies\googletest-master\googlemock\include;..\..\Dependencies\glfw-3.1.2.bin.WIN32\include;..\..\Dependencies\glew32\glew-1.9.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -73,7 +73,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\Dependencies\googletest-master\googletest\include;../IceFairyEngine/src;..\..\Dependencies\googletest-master\googlemock\include;..\..\Dependencies\glfw-3.1.2.bin.WIN32\include;..\..\Dependencies\glew32\glew-1.9.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Dependencies\googletest-master\googletest\include;../IceFairyCore/src;..\..\Dependencies\googletest-master\googlemock\include;..\..\Dependencies\glfw-3.1.2.bin.WIN32\include;..\..\Dependencies\glew32\glew-1.9.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>

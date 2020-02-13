@@ -38,15 +38,20 @@ namespace IceFairy {
 
 		void StartMainLoop(void);
 
+		// TODO: This might move elsewhere
 		void AddVertexObject(const VertexObject& vertexObject);
+
+		void SetWindowWidth(const int& windowWidth);
+		void SetWindowHeight(const int& windowHeight);
+		int GetWindowWidth(void) const;
+		int GetWindowHeight(void) const;
 
 		// TODO: Rethink how to do this - we don't want this public
 		void SetIsFrameBufferResized(const bool& value);
 
 	private:
-		// TODO: Pass this in from somewhere - some config
-		const int WIDTH = 800;
-		const int HEIGHT = 600;
+		int windowWidth = -1;
+		int windowHeight = -1;
 
 		// TODO: config?
 		const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -117,6 +122,8 @@ namespace IceFairy {
 		vk::Image colorImage;
 		vma::Allocation colorImageMemory;
 		vk::ImageView colorImageView;
+
+		void CheckPreconditions(void);
 
 		// Todo: change this - change it to what??
 		std::vector<vk::Semaphore> imageAvailableSemaphores;

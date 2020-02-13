@@ -99,7 +99,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\Dependencies\glfw-3.2.1.bin.WIN64\include;..\..\Dependencies\glew-2.1.0\include;../IceFairyEngine/src;../GraphicsModule/src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Dependencies\glfw-3.2.1.bin.WIN64\include;..\..\Dependencies\glew-2.1.0\include;../IceFairyCore/src;../GraphicsModule/src</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -125,7 +125,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\Dependencies\glfw-3.2.1.bin.WIN64\include;..\..\Dependencies\glew-2.1.0\include;../IceFairyEngine/src;../GraphicsModule/src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Dependencies\glfw-3.2.1.bin.WIN64\include;..\..\Dependencies\glew-2.1.0\include;../IceFairyCore/src;../GraphicsModule/src</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

@@ -6,6 +6,7 @@
 
 #include "icexception.h"
 
+// TODO: Consider returning data as a char*/const char* rather than a string
 namespace IceFairy {
     /*! \brief Thrown when the given resource does not exist. */
     class ResourceDoesNotExistException : public ICException {

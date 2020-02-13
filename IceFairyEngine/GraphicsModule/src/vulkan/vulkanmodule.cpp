@@ -16,9 +16,6 @@ const std::vector<const char*> deviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-const int WIDTH = 800;
-const int HEIGHT = 600;
-
 const std::string MODEL_PATH = "models/chalet.obj";
 const std::string TEXTURE_PATH = "textures/chalet.jpg";
 
@@ -71,11 +68,24 @@ bool CheckValidationLayerSupport(void) {
 	return true;
 }
 
-VulkanModule::VulkanModule(const std::string & name)
-	: Module(name)
+VulkanModule::VulkanModule(const std::string& name) :
+	Module(name)
 { }
 
+// TODO: Catch VulkanExceptions and do stuff sensibly with them
+void VulkanModule::CheckPreconditions(void) {
+	if (windowWidth == 0) {
+		throw VulkanException("Window width has not been set (currently 0)");
+	}
+
+	if (windowHeight == 0) {
+		throw VulkanException("Window height has not been set (currently 0)");
+	}
+}
+
 bool VulkanModule::Initialise(void) {
+	CheckPreconditions();
+
 	InitialiseWindow();
 
 	InitialiseVulkanInstance();
@@ -166,13 +176,29 @@ void VulkanModule::InitialiseWindow(void) {
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-	window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+	window = glfwCreateWindow(windowWidth, windowHeight, "Vulkan", nullptr, nullptr);
 	glfwSetWindowUserPointer(window, this);
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
 void VulkanModule::AddVertexObject(const VertexObject& vertexObject) {
 	vertexObjects.push_back(vertexObject);
+}
+
+void IceFairy::VulkanModule::SetWindowWidth(const int& windowWidth) {
+	this->windowWidth = windowWidth;
+}
+
+void IceFairy::VulkanModule::SetWindowHeight(const int& windowHeight) {
+	this->windowHeight = windowHeight;
+}
+
+int IceFairy::VulkanModule::GetWindowWidth(void) const {
+	return windowWidth;
+}
+
+int IceFairy::VulkanModule::GetWindowHeight(void) const {
+	return windowHeight;
 }
 
 void VulkanModule::SetIsFrameBufferResized(const bool& value) {
@@ -387,7 +413,7 @@ vk::ImageView VulkanModule::CreateImageView(vk::Image image, vk::Format format, 
 		return device.createImageView(viewInfo);
 	}
 	catch (std::runtime_error err) {
-		throw VulkanModule("failed to create texture image view!");
+		throw VulkanException("failed to create texture image view!");
 	}
 }
 
@@ -671,7 +697,7 @@ void VulkanModule::CreateDescriptorSetLayout(void) {
 		descriptorSetLayout = device.createDescriptorSetLayout(layoutInfo);
 	}
 	catch (std::runtime_error err) {
-		throw VulkanModule("failed to create descriptor set layout!");
+		throw VulkanException("failed to create descriptor set layout!");
 	}
 }
 

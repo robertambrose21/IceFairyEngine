@@ -11,7 +11,7 @@
 
 #include "vulkan/vulkanmodule.h"
 #include "vulkan/vertexobject.h"
-#include "core/application.h"
+#include "application.h"
 
 #define ICE_FAIRY_TREAT_VERBOSE_AS_DEBUG true
 
@@ -27,6 +27,9 @@ public:
 
 	void Initialise(void) {
 		module = AddModule<IceFairy::VulkanModule>("VulkanModule");
+
+		module->SetWindowWidth(800);
+		module->SetWindowHeight(600);
 
 		module->AddVertexObject(
 			IceFairy::VertexObject(
@@ -93,7 +96,8 @@ int main(int argc, char** argv) {
 	}
 	catch (const std::exception & e) {
 		std::cout << e.what() << std::endl;
-		// IceFairy::Logger::PrintLn(IceFairy::Logger::LEVEL_ERROR, e.what());
+		std::cout << "m8 you left both logging on" << std::endl;
+		//IceFairy::Logger::PrintLn(IceFairy::Logger::LEVEL_ERROR, e.what());
 		return EXIT_FAILURE;
 	}
 

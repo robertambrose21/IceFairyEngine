@@ -4,9 +4,9 @@ using namespace IceFairy;
 
 VertexObject::VertexObject(
 	const std::vector<unsigned int>& indices,
-	const std::vector<Vertex>& vertices
-): indices(indices),
-   vertices(vertices)
+	const std::vector<Vertex>& vertices):
+	indices(indices),
+	vertices(vertices)
 { }
 
 VertexObject::~VertexObject() {
