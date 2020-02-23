@@ -90,7 +90,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\VulkanSDK\1.1.82.1\Include;E:\Prog\C++\IceFairyEngine\Dependencies\glm;E:\Prog\C++\IceFairyEngine\Dependencies\glfw-3.2.1.bin.WIN64\include;../GraphicsModule/src;../IceFairyCore/src;E:\Prog\C++\IceFairyEngine\Dependencies\tinyobjloader-master;../IceFairyApplication/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -147,7 +147,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\VulkanSDK\1.1.82.1\Include;E:\Prog\C++\IceFairyEngine\Dependencies\glm;E:\Prog\C++\IceFairyEngine\Dependencies\glfw-3.2.1.bin.WIN64\include;../GraphicsModule/src;../IceFairyCore/src;E:\Prog\C++\IceFairyEngine\Dependencies\tinyobjloader-master;../IceFairyApplication/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

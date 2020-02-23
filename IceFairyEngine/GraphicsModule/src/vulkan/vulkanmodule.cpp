@@ -68,8 +68,8 @@ bool CheckValidationLayerSupport(void) {
 	return true;
 }
 
-VulkanModule::VulkanModule(const std::string& name) :
-	Module(name)
+VulkanModule::VulkanModule() :
+	Module()
 { }
 
 // TODO: Catch VulkanExceptions and do stuff sensibly with them
@@ -81,6 +81,10 @@ void VulkanModule::CheckPreconditions(void) {
 	if (windowHeight == 0) {
 		throw VulkanException("Window height has not been set (currently 0)");
 	}
+}
+
+std::string IceFairy::VulkanModule::GetName(void) const {
+	return "VulkanModule";
 }
 
 bool VulkanModule::Initialise(void) {
@@ -882,6 +886,10 @@ void VulkanModule::CreateVertexBuffer(VertexObject& vertexObject) {
 	memcpy(data, vertexObject.GetVertices().data(), (size_t)bufferSize);
 	allocator.unmapMemory(stagingAllocation);
 	// TODO: Apparently we have to do this? Doesn't seem to make a difference - find out why. Check VMA docs
+	// v
+	// We went for the first approach, which ensures that the mapped memory always matches the contents of the allocated memory.
+	// Do keep in mind that this may lead to slightly worse performance than explicit flushing, but we'll see why that doesn't matter in the next chapter.
+	// https://vulkan-tutorial.com/Vertex_buffers/Vertex_buffer_creation
 	allocator.flushAllocation(stagingAllocation, 0, bufferSize);
 
 	auto& bufferAllocation = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst |

@@ -2,14 +2,7 @@
 
 using namespace IceFairy;
 
-const std::string DEFAULT_MODULE_WARNING_NAME = "No Module name defined - Implement \"GetName()\" in your module.";
-
 Module::Module()
-	: name(DEFAULT_MODULE_WARNING_NAME)
-{ }
-
-Module::Module(const std::string& name)
-	: name(name)
 { }
 
 bool Module::Initialise(void) {
@@ -24,7 +17,7 @@ bool Module::Initialise(void) {
 }
 
 std::string Module::GetName(void) const {
-	return name;
+	throw ModuleNameUndefinedException();
 }
 
 std::string Module::ListSubModules(void) {

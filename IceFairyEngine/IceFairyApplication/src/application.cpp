@@ -20,6 +20,11 @@ void Application::Initialise() {
 		"___________________________________\n";
 
 	Logger::Print(logo);
+
+	Logger::PrintLn(Logger::LEVEL_INFO, "Initialising entity registry...");
+	entityRegistry.Initialise();
+	Logger::PrintLn(Logger::LEVEL_INFO, "Done");
+
 	Logger::PrintLn(Logger::LEVEL_INFO, "Loading Modules...");
 
 	unsigned int numModulesLoaded = 0;
@@ -34,6 +39,7 @@ void Application::Initialise() {
 		}
 	}
 	Logger::PrintLn(Logger::LEVEL_INFO, "%d/%d modules loaded.", numModulesLoaded, modules.size());
+
 	Logger::PrintLn(Logger::LEVEL_INFO, "Starting...");
 }
 
@@ -47,6 +53,10 @@ std::shared_ptr<Module> Application::GetModule(std::string moduleName) {
 
 bool Application::IsModuleLoaded(std::string moduleName) {
     return modules.find(moduleName) != modules.end();
+}
+
+EntityRegistry& IceFairy::Application::GetEntityRegistry(void) {
+	return entityRegistry;
 }
 
 void Application::UnloadModule(std::string moduleName) {

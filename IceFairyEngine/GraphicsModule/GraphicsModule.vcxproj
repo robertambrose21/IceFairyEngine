@@ -134,7 +134,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../IceFairyCore/src;C:\VulkanSDK\1.1.82.1\Include;..\..\Dependencies\glfw-3.2.1.bin.WIN64\include;..\..\Dependencies\glew-2.1.0\include;..\..\Dependencies\glm;..\..\Dependencies\tinyobjloader-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>..\..\Dependencies\glfw-3.2.1.bin.WIN64\lib-vc2013;..\..\Dependencies\glew32\glew-1.9.0\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -171,7 +171,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../IceFairyCore/src;C:\VulkanSDK\1.1.82.1\Include;..\..\Dependencies\glfw-3.2.1.bin.WIN64\include;..\..\Dependencies\glew-2.1.0\include;..\..\Dependencies\glm;..\..\Dependencies\tinyobjloader-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>

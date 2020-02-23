@@ -1,7 +1,10 @@
 #pragma once
 
-#include "core\module.h"
-#include "core\utilities\logger.h"
+#include <unordered_map>
+
+#include "core/module.h"
+#include "core/utilities/logger.h"
+#include "ecs/entityregistry.h"
 
 namespace IceFairy {
     /*! \brief Abstract application class. Baseline for the main app entry point.
@@ -56,14 +59,18 @@ namespace IceFairy {
          */
         bool                    IsModuleLoaded(std::string moduleName);
 
+		EntityRegistry& GetEntityRegistry(void);
+
     protected:
+		// TODO: Handle this better
 		/*! \brief Adds a module into the application. */
 		template<class T>
-		std::shared_ptr<T> AddModule(const std::string& name) {
-			auto module = std::shared_ptr<T>(new T(name));
+		std::shared_ptr<T> AddModule() {
+			auto module = std::make_shared<T>();
 
 			try {
 				modules[module->GetName()] = module;
+				entityRegistry.AddRegisteredModule(module);
 				return module;
 			}
 			catch (NoSuchModuleException& e) {
@@ -82,8 +89,10 @@ namespace IceFairy {
         char**                  GetArgv(void) const;
 
     private:
-        Module::ModuleMap   modules;
-        int                 argc;
-        char**              argv;
+		EntityRegistry entityRegistry;
+		std::unordered_map<std::string, std::shared_ptr<Module>> modules;
+
+        int argc;
+        char** argv;
     };
 }

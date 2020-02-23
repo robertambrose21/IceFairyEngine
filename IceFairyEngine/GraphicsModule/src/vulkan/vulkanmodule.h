@@ -30,8 +30,10 @@ namespace IceFairy {
 
 	class VulkanModule : public Module {
 	public:
-		VulkanModule(const std::string& name);
+		VulkanModule();
 		virtual ~VulkanModule() { }
+
+		std::string GetName(void) const;
 
 		bool Initialise(void);
 		void CleanUp(void);

@@ -2,7 +2,7 @@
 #define __ice_fairy_module_h__
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <exception>
 
@@ -14,10 +14,18 @@ namespace IceFairy {
     class NoSuchModuleException : public ICException {
     public:
         /*! \internal */
-        NoSuchModuleException()
-            : ICException("No module by that name exists.")
+        NoSuchModuleException() :
+			ICException("No module by that name exists.")
         { }
     };
+
+	class ModuleNameUndefinedException : public ICException {
+	public:
+		/*! \internal */
+		ModuleNameUndefinedException() :
+			ICException("No Module name defined - Implement \"GetName()\" in your module.")
+		{ }
+	};
 
     /*! \brief Abstract module class. Baseline for loading specific resources into an \ref Application
      * 
@@ -48,16 +56,8 @@ namespace IceFairy {
      */
     class Module {
     public:
-        /*! \brief STL map of Module pointers. */
-        typedef std::map<std::string, std::shared_ptr<Module>> ModuleMap;
-
         /*! \brief Constructor, create the module */
         Module();
-		/*! \brief Constructor, create the module
-		 *
-		 * \param name The name of the module
-		 */
-		Module(const std::string& name);
         /*! \brief Destructor, overload for use of any module clean up. */
         virtual ~Module() { };
 
@@ -73,7 +73,7 @@ namespace IceFairy {
          * 
          * \returns the name of this module.
          */
-        std::string             GetName(void) const;
+        virtual std::string GetName(void) const;
         /*! \brief Lists the sub-modules of this module.
          *
          * \returns a string of all sub-modules used by this module.
@@ -101,7 +101,7 @@ namespace IceFairy {
 		}
 
     private:
-        ModuleMap   subModules;
+		std::unordered_map<std::string, std::shared_ptr<Module>> subModules;
 		std::string	name;
     };
 }

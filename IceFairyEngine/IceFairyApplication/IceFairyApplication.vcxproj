@@ -21,12 +21,17 @@
   <ItemGroup>
     <ClCompile Include="src\application.cpp" />
     <ClCompile Include="src\ecs\component.cpp" />
+    <ClCompile Include="src\ecs\components\vertexobjectcomponent.cpp" />
     <ClCompile Include="src\ecs\entity.cpp" />
+    <ClCompile Include="src\ecs\entityregistry.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\application.h" />
     <ClInclude Include="src\ecs\component.h" />
+    <ClInclude Include="src\ecs\components\vertexobjectcomponent.h" />
+    <ClInclude Include="src\ecs\componenttypes.h" />
     <ClInclude Include="src\ecs\entity.h" />
+    <ClInclude Include="src\ecs\entityregistry.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IceFairyCore\IceFairyCore.vcxproj">
@@ -105,7 +110,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\IceFairyCore\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\IceFairyCore\src;..\GraphicsModule\src;C:\VulkanSDK\1.1.82.1\Include;E:\Prog\C++\IceFairyEngine\Dependencies\glfw-3.2.1.bin.WIN64\include;E:\Prog\C++\IceFairyEngine\Dependencies\tinyobjloader-master;E:\Prog\C++\IceFairyEngine\Dependencies\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -154,7 +160,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\IceFairyCore\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\IceFairyCore\src;..\GraphicsModule\src;C:\VulkanSDK\1.1.82.1\Include;E:\Prog\C++\IceFairyEngine\Dependencies\glfw-3.2.1.bin.WIN64\include;E:\Prog\C++\IceFairyEngine\Dependencies\tinyobjloader-master;E:\Prog\C++\IceFairyEngine\Dependencies\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
