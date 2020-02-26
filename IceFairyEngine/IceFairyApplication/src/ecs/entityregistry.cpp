@@ -31,9 +31,10 @@ void IceFairy::EntityRegistry::Initialise(void) {
 		if (registeredModules.find("VulkanModule") != registeredModules.end()) {
 			auto module = std::dynamic_pointer_cast<VulkanModule>(registeredModules["VulkanModule"]);
 
+			// TODO: JobSystem
 			if (entity->HasComponent<VertexObjectComponent>()) {
 				auto component = entity->GetComponent<VertexObjectComponent>();
-				module->AddVertexObject(component->GetVertexObject());
+				module->AddVertexObject(VertexObject(component->GetIndicies(), component->GetVertices()));
 			}
 		}
 	}

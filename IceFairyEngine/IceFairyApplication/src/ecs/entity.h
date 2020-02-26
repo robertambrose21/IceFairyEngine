@@ -10,6 +10,7 @@
 #include "core/utilities/icexception.h"
 
 // TODO: Sub-entities
+// TODO: Components should have no logic, only data. Construct systems which can take multiple components and filter out entities based off of them
 namespace IceFairy {
 
 	class EntityException : public ICException {

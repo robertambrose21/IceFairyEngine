@@ -10,9 +10,11 @@ namespace IceFairy {
 			const std::vector<unsigned int>& indices,
 			const std::vector<Vertex>& vertices);
 
-		VertexObject& GetVertexObject(void);
+		std::vector<unsigned int>& GetIndicies(void);
+		std::vector<Vertex>& GetVertices(void);
 
 	private:
-		VertexObject vertexObject;
+		std::vector<unsigned int> indices;
+		std::vector<Vertex> vertices;
 	};
 }
