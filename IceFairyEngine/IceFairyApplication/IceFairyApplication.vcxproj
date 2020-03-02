@@ -32,6 +32,9 @@
     <ClInclude Include="src\ecs\componenttypes.h" />
     <ClInclude Include="src\ecs\entity.h" />
     <ClInclude Include="src\ecs\entityregistry.h" />
+    <ClInclude Include="src\ecs\jobsystem.h" />
+    <ClInclude Include="src\ecs\systems\vertexobjectsystem.h" />
+    <ClInclude Include="src\ecs\systems\vulkansystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IceFairyCore\IceFairyCore.vcxproj">

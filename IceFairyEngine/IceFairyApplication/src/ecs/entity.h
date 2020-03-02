@@ -25,6 +25,7 @@ namespace IceFairy {
 	public:
 		Entity(int id);
 
+		// TODO: Check is_base_of_v
 		template<typename T, typename... Args, typename std::enable_if<std::is_base_of<Component, T>::value>::type* = nullptr>
 		std::shared_ptr<T> AddComponent(Args&&... args) {
 			auto component = std::make_shared<T>(std::forward<Args>(args)...);

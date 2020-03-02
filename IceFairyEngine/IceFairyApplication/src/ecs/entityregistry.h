@@ -9,6 +9,8 @@
 #include "core/module.h"
 #include "vulkan/vulkanmodule.h"
 #include "components/vertexobjectcomponent.h"
+#include "jobsystem.h"
+#include "systems/vertexobjectsystem.h"
 
 namespace IceFairy {
 
@@ -31,6 +33,16 @@ namespace IceFairy {
 
 		void Initialise(void);
 		void StartEntityLoop(void);
+
+		// TODO: Multithreading and consider moving to a special JobSystem class
+		template<typename... Ts>
+		void Schedule(std::shared_ptr<JobSystem<Ts...>> system) {
+			for (auto[id, entity] : entities) {
+				if ((entity->HasComponent<Ts>() && ...)) {
+					system->Execute(entity->GetComponent<Ts>()...);
+				}
+			}
+		}
 
 	private:
 		std::unordered_map<std::string, std::shared_ptr<Module>> registeredModules;
