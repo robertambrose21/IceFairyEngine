@@ -7,13 +7,11 @@
 #include "vulkan/vulkan.hpp"
 
 namespace IceFairy {
-	/*! \brief Basic Vertex struct for assigning the position, normal and texture coordinate of a vertex */
 	typedef struct _vertex {
 		glm::vec3 position;
 		glm::vec3 colour;
 		glm::vec2 texcoord;
 
-		/*! \brief Create a \ref Vertex with a position, normal and texcoord */
 		_vertex(const glm::vec3& position, const glm::vec3& colour, const glm::vec2& texcoord) {
 			this->position = position;
 			this->colour = colour;

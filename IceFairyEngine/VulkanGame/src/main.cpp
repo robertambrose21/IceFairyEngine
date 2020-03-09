@@ -14,13 +14,33 @@
 #include "vulkan/vertexobject.h"
 #include "application.h"
 
-#include "ecs/components/vertexobjectcomponent.h"
+#include "input/inputregister.h"
+#include "input/keylistener.h"
 
+#include "ecs/components/vertexobjectcomponent.h"
 #include "ecs/entityregistry.h"
 
 #define ICE_FAIRY_TREAT_VERBOSE_AS_DEBUG true
 
-class DemoApplication : IceFairy::Application {
+/*
+ * TODOs:
+ * - Cleanup all TODOs
+ * - Module names in a central place
+ * - Don't use a staging buffer for vertices which change value but have a static count
+ * - Create new buffers if the number of vertices change
+ * - Break out material computation (textures)
+ * - Use vulkan tools shaders to automatically compile shaders
+ * - Store index/vertex buffers in a single VkBuffer
+ * - Store submit/copy functions in a single command buffer and execute asynchronously
+ * - Remove all instances of "using namespace IceFairy"
+ * - Tests
+ * - Device unique instance if possible
+ */
+
+class DemoApplication :
+	public IceFairy::Application,
+	public IceFairy::KeyListener,
+	public std::enable_shared_from_this<DemoApplication> {
 public:
 	DemoApplication(int argc, char** argv)
 		: IceFairy::Application(argc, argv)
@@ -76,10 +96,25 @@ public:
 		);
 
 		Application::Initialise();
+
+		IceFairy::InputRegister::Initialise(module->GetWindow());
+		IceFairy::InputRegister::AddKeyListener(shared_from_this());
 	}
 
 	void StartMainLoop(void) {
 		module->StartMainLoop();
+	}
+
+	void OnKeyDown(int key, int mods) {
+		IceFairy::Logger::PrintLn(IceFairy::Logger::LEVEL_INFO, "Key down '%c'", key);
+	}
+
+	void OnKeyUp(int key, int mods) {
+		IceFairy::Logger::PrintLn(IceFairy::Logger::LEVEL_INFO, "Key up '%c'", key);
+	}
+
+	void OnKeyRepeat(int key, int mods) {
+
 	}
 
 private:

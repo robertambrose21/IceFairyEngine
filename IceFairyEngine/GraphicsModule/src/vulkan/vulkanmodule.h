@@ -48,6 +48,8 @@ namespace IceFairy {
 		int GetWindowWidth(void) const;
 		int GetWindowHeight(void) const;
 
+		GLFWwindow* GetWindow(void);
+
 		// TODO: Rethink how to do this - we don't want this public
 		void SetIsFrameBufferResized(const bool& value);
 
@@ -82,6 +84,7 @@ namespace IceFairy {
 			alignas(16) glm::mat4 proj;
 		} UniformBufferObject;
 
+		// TODO: smart pointer?
 		GLFWwindow* window;
 		vk::Instance instance;
 		VkSurfaceKHR surface;

@@ -205,6 +205,10 @@ int IceFairy::VulkanModule::GetWindowHeight(void) const {
 	return windowHeight;
 }
 
+GLFWwindow* IceFairy::VulkanModule::GetWindow(void) {
+	return window;
+}
+
 void VulkanModule::SetIsFrameBufferResized(const bool& value) {
 	this->isFrameBufferResized = value;
 }
