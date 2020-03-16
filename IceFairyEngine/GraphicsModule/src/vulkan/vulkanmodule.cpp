@@ -84,7 +84,7 @@ void VulkanModule::CheckPreconditions(void) {
 }
 
 std::string IceFairy::VulkanModule::GetName(void) const {
-	return "VulkanModule";
+	return Constants::VulkanModuleName;
 }
 
 bool VulkanModule::Initialise(void) {
@@ -425,6 +425,7 @@ vk::ImageView VulkanModule::CreateImageView(vk::Image image, vk::Format format, 
 	}
 }
 
+// TODO: We probably want to move texture creation to another class
 void VulkanModule::CreateTextureImage(void) {
 	int texWidth, texHeight, texChannels;
 	stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -714,7 +715,6 @@ void VulkanModule::CreateUniformBuffers(void) {
 
 	uniformBuffers.resize(swapChainImages.size());
 
-	// TODO: Proper for
 	for (size_t i = 0; i < swapChainImages.size(); i++) {
 		uniformBuffers[i] = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eHostVisible
 			| vk::MemoryPropertyFlagBits::eHostCoherent);
@@ -842,6 +842,7 @@ void VulkanModule::CreateFrameBuffers(void) {
 	}
 }
 
+// TODO: Look into moving command pool/command buffer stuff to separate classes
 // TODO: Return value? - Same for all of these "create" methods
 void VulkanModule::CreateCommandPool(void) {
 	QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(physicalDevice);
@@ -1173,7 +1174,7 @@ void VulkanModule::CleanupSwapChain(void) {
 }
 
 void VulkanModule::RecreateSwapChain(void) {
-	// TODO: Window is minimized - wait until we unminimize. Separate function might be nice
+	// TODO: This while is when the window is minimized - wait until we unminimize. Separate function might be nice
 	int width = 0, height = 0;
 	while (width == 0 || height == 0) {
 		glfwGetFramebufferSize(window, &width, &height);
@@ -1258,6 +1259,7 @@ void VulkanModule::UpdateUniformBuffer(uint32_t currentImage) {
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
+	// TODO: This is the camera, need to create a separate class for it
 	UniformBufferObject ubo = {};
 	ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));

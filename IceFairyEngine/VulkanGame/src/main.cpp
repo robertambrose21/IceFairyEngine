@@ -25,7 +25,6 @@
 /*
  * TODOs:
  * - Cleanup all TODOs
- * - Module names in a central place
  * - Don't use a staging buffer for vertices which change value but have a static count
  * - Create new buffers if the number of vertices change
  * - Break out material computation (textures)
@@ -35,6 +34,9 @@
  * - Remove all instances of "using namespace IceFairy"
  * - Tests
  * - Device unique instance if possible
+ * - Load models
+ * - Global exception catching
+ * - Attach shader modules to the vulkan module - as a submodule maybe?
  */
 
 class DemoApplication :

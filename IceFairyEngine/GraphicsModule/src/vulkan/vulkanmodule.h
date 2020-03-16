@@ -19,6 +19,7 @@
 // TODO: Offload to a resource class
 
 #include "core/module.h"
+#include "constants/modulenames.h"
 #include "vulkanexception.h"
 #include "shadermodule.h"
 // Consider moving to cpp file too

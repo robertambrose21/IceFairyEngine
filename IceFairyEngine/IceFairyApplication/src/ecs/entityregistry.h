@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "core/utilities/icexception.h"
+#include "constants/modulenames.h"
 #include "entity.h"
 #include "core/module.h"
 #include "vulkan/vulkanmodule.h"

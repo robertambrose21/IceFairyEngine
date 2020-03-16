@@ -25,8 +25,8 @@ void IceFairy::EntityRegistry::AddRegisteredModule(std::shared_ptr<Module> modul
 }
 
 void IceFairy::EntityRegistry::Initialise(void) {
-	if (registeredModules.find("VulkanModule") != registeredModules.end()) {
-		auto module = std::dynamic_pointer_cast<VulkanModule>(registeredModules["VulkanModule"]);
+	if (registeredModules.find(Constants::VulkanModuleName) != registeredModules.end()) {
+		auto module = std::dynamic_pointer_cast<VulkanModule>(registeredModules[Constants::VulkanModuleName]);
 
 		Schedule(std::make_shared<VertexObjectSystem>(module));
 	}
@@ -34,8 +34,7 @@ void IceFairy::EntityRegistry::Initialise(void) {
 
 void IceFairy::EntityRegistry::StartEntityLoop(void) {
 	for (auto& [id, entity] : entities) {
-		// TODO: Common place for module names for easier lookup
-		if (registeredModules.find("VulkanModule") != registeredModules.end()) {
+		if (registeredModules.find(Constants::VulkanModuleName) != registeredModules.end()) {
 
 		}
 	}

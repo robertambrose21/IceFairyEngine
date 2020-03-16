@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\constants\modulenames.h" />
     <ClInclude Include="src\core\camera.h" />
     <ClInclude Include="src\core\module.h" />
     <ClInclude Include="src\core\utilities\icexception.h" />
