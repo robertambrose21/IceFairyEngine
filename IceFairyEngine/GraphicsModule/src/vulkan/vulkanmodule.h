@@ -10,7 +10,7 @@
 
 #include <string>
 #include <vector>
-#include <optional>
+#include <optional> // TODO: Remove
 #include <set>
 #include <algorithm>
 #include <array>
@@ -22,6 +22,8 @@
 #include "constants/modulenames.h"
 #include "vulkanexception.h"
 #include "shadermodule.h"
+#include "queuefamily.h"
+#include "commandpoolmanager.h"
 // Consider moving to cpp file too
 #include "../stbi/stb_image.h"
 
@@ -62,15 +64,6 @@ namespace IceFairy {
 		const int MAX_FRAMES_IN_FLIGHT = 2;
 
 		typedef struct {
-			std::optional<uint32_t> graphicsFamily;
-			std::optional<uint32_t> presentFamily;
-
-			bool isComplete() {
-				return graphicsFamily.has_value() && presentFamily.has_value();
-			}
-		} QueueFamilyIndices;
-
-		typedef struct {
 			vk::SurfaceCapabilitiesKHR capabilities;
 			std::vector<vk::SurfaceFormatKHR> formats;
 			std::vector<vk::PresentModeKHR> presentModes;
@@ -109,7 +102,8 @@ namespace IceFairy {
 
 		std::vector<vk::Framebuffer> swapChainFramebuffers;
 
-		vk::CommandPool commandPool;
+		std::shared_ptr<CommandPoolManager> commandPoolManager;
+		// TODO: Handle this properly - See CommandPoolManager
 		std::vector<vk::CommandBuffer> commandBuffers;
 
 		std::vector<VertexObject> vertexObjects;
@@ -158,7 +152,6 @@ namespace IceFairy {
 		// Physical Device
 		void PickPhysicalDevice(void);
 		bool IsDeviceSuitable(vk::PhysicalDevice device);
-		QueueFamilyIndices FindQueueFamilies(vk::PhysicalDevice device);
 
 		// Logical Device
 		void CreateLogicalDevice(void);
@@ -181,8 +174,6 @@ namespace IceFairy {
 		void CreateTextureImageView(void);
 		void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling,
 			vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::Image& image, vma::Allocation& imageMemory);
-		vk::CommandBuffer BeginSingleTimeCommands(void);
-		void EndSingleTimeCommands(vk::CommandBuffer commandBuffer);
 		void TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t mipLevels);
 		void CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height);
 		void GenerateMipmaps(vk::Image image, vk::Format imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
@@ -197,10 +188,6 @@ namespace IceFairy {
 
 		// Frame Buffers
 		void CreateFrameBuffers(void);
-
-		// Commands
-		void CreateCommandPool(void);
-		void CreateCommandBuffers(void);
 
 		// Drawing
 		void DrawFrame(void);

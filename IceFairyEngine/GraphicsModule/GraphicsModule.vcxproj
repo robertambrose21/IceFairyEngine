@@ -31,6 +31,8 @@
     <ClCompile Include="src\shader.cpp" />
     <ClCompile Include="src\shapes\cubeobject.cpp" />
     <ClCompile Include="src\stbi\stb_image.c" />
+    <ClCompile Include="src\vulkan\commandpoolmanager.cpp" />
+    <ClCompile Include="src\vulkan\queuefamily.cpp" />
     <ClCompile Include="src\vulkan\shadermodule.cpp" />
     <ClCompile Include="src\vulkan\vertexobject.cpp" />
     <ClCompile Include="src\vulkan\vulkanmodule.cpp" />
@@ -52,7 +54,9 @@
     <ClInclude Include="src\shader.h" />
     <ClInclude Include="src\shapes\cubeobject.h" />
     <ClInclude Include="src\stbi\stb_image.h" />
+    <ClInclude Include="src\vulkan\commandpoolmanager.h" />
     <ClInclude Include="src\vulkan\glm_include.h" />
+    <ClInclude Include="src\vulkan\queuefamily.h" />
     <ClInclude Include="src\vulkan\shadermodule.h" />
     <ClInclude Include="src\vulkan\vertexobject.h" />
     <ClInclude Include="src\vulkan\vulkanexception.h" />

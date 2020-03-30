@@ -104,7 +104,7 @@ bool VulkanModule::Initialise(void) {
 	CreateRenderPass();
 	CreateDescriptorSetLayout();
 	CreateGraphicsPipeline();
-	CreateCommandPool();
+	commandPoolManager = std::make_shared<CommandPoolManager>(device, physicalDevice, surface);
 	CreateColorResources();
 	CreateDepthResources();
 	CreateFrameBuffers();
@@ -121,7 +121,16 @@ bool VulkanModule::Initialise(void) {
 	CreateUniformBuffers();
 	CreateDescriptorPool();
 	CreateDescriptorSets();
-	CreateCommandBuffers();
+	commandPoolManager->CreateCommandBuffers(
+		commandBuffers,
+		vertexObjects,
+		swapChainFramebuffers,
+		renderPass,
+		swapChainExtent,
+		graphicsPipeline,
+		pipelineLayout,
+		descriptorSets
+	);
 	CreateSyncObjects();
 
 	return true;
@@ -148,7 +157,7 @@ void VulkanModule::CleanUp(void) {
 		vkDestroyFence(device, inFlightFences[i], nullptr);
 	}
 
-	vkDestroyCommandPool(device, commandPool, nullptr);
+	commandPoolManager->CleanUp();
 
 	vmaDestroyAllocator(allocator);
 
@@ -260,7 +269,7 @@ void VulkanModule::CreateSwapChain(void) {
 	vk::SwapchainCreateInfoKHR createInfo({}, surface, imageCount, surfaceFormat.format, surfaceFormat.colorSpace,
 		extent, 1, vk::ImageUsageFlagBits::eColorAttachment);
 
-	QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
+	QueueFamily::Indices indices = QueueFamily(physicalDevice, surface).FindQueueFamilies();
 	uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
 	if (indices.graphicsFamily != indices.presentFamily) {
@@ -313,7 +322,7 @@ void VulkanModule::PickPhysicalDevice(void) {
 }
 
 bool VulkanModule::IsDeviceSuitable(vk::PhysicalDevice device) {
-	QueueFamilyIndices indices = FindQueueFamilies(device);
+	QueueFamily::Indices indices = QueueFamily(device, surface).FindQueueFamilies();
 
 	bool extensionsSupported = CheckDeviceExtensionSupport(device);
 
@@ -328,43 +337,8 @@ bool VulkanModule::IsDeviceSuitable(vk::PhysicalDevice device) {
 	return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
 }
 
-VulkanModule::QueueFamilyIndices VulkanModule::FindQueueFamilies(vk::PhysicalDevice device) {
-	QueueFamilyIndices indices;
-
-	std::vector<vk::QueueFamilyProperties> queueFamilies = device.getQueueFamilyProperties();
-
-	int i = 0;
-	for (const auto& queueFamily : queueFamilies) {
-		if (queueFamily.queueCount > 0 && queueFamily.queueFlags & vk::QueueFlagBits::eGraphics) {
-			indices.graphicsFamily = i;
-		}
-
-		/* TODO:
-		Note that it's very likely that these end up being the same queue family after all,
-		but throughout the program we will treat them as if they were separate queues for a 
-		uniform approach. Nevertheless, you could add logic to explicitly prefer a physical
-		device that supports drawing and presentation in the same queue for improved
-		performance.*/
-		// Note: Above may be fine due to concurrency
-		vk::Bool32 presentSupport = false;
-		device.getSurfaceSupportKHR(i, surface, &presentSupport);
-
-		if (queueFamily.queueCount > 0 && presentSupport) {
-			indices.presentFamily = i;
-		}
-
-		if (indices.isComplete()) {
-			break;
-		}
-
-		i++;
-	}
-
-	return indices;
-}
-
 void VulkanModule::CreateLogicalDevice(void) {
-	QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
+	QueueFamily::Indices indices = QueueFamily(physicalDevice, surface).FindQueueFamilies();
 
 	std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
 	std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
@@ -467,7 +441,7 @@ void VulkanModule::GenerateMipmaps(vk::Image image, vk::Format imageFormat, int3
 		throw VulkanException("texture image format does not support linear blitting!");
 	}
 
-	vk::CommandBuffer commandBuffer = BeginSingleTimeCommands();
+	vk::CommandBuffer commandBuffer = commandPoolManager->BeginSingleTimeCommands();
 
 	vk::ImageMemoryBarrier barrier({}, {}, {}, {}, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, image,
 		vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
@@ -532,7 +506,7 @@ void VulkanModule::GenerateMipmaps(vk::Image image, vk::Format imageFormat, int3
 		0, nullptr,
 		1, &barrier);
 
-	EndSingleTimeCommands(commandBuffer);
+	commandPoolManager->EndSingleTimeCommands(commandBuffer, graphicsQueue);
 }
 
 void VulkanModule::CreateTextureImageView(void) {
@@ -601,32 +575,9 @@ void VulkanModule::CreateImage(uint32_t width, uint32_t height, uint32_t mipLeve
 	allocator.bindImageMemory(imageMemory, image);
 }
 
-vk::CommandBuffer VulkanModule::BeginSingleTimeCommands(void) {
-	vk::CommandBufferAllocateInfo allocInfo(commandPool, vk::CommandBufferLevel::ePrimary, 1);
-
-	// TODO: Supposedly you allocate all buffers at the start? - This is possibly fine due to being a "single time command"
-	vk::CommandBuffer commandBuffer = device.allocateCommandBuffers(allocInfo).at(0);
-	commandBuffer.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
-
-	return commandBuffer;
-}
-
-void VulkanModule::EndSingleTimeCommands(vk::CommandBuffer commandBuffer) {
-	commandBuffer.end();
-
-	vk::SubmitInfo submitInfo = {};
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commandBuffer;
-
-	graphicsQueue.submit(1, &submitInfo, nullptr);
-	graphicsQueue.waitIdle();
-
-	device.freeCommandBuffers(commandPool, 1, &commandBuffer);
-}
-
 // TODO: Find out what the fuck is going on in this method
 void VulkanModule::TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t mipLevels) {
-	vk::CommandBuffer commandBuffer = BeginSingleTimeCommands();
+	vk::CommandBuffer commandBuffer = commandPoolManager->BeginSingleTimeCommands();
 
 	vk::PipelineStageFlags sourceStage;
 	vk::PipelineStageFlags destinationStage;
@@ -678,18 +629,18 @@ void VulkanModule::TransitionImageLayout(vk::Image image, vk::Format format, vk:
 		0, nullptr,
 		1, &barrier);
 
-	EndSingleTimeCommands(commandBuffer);
+	commandPoolManager->EndSingleTimeCommands(commandBuffer, graphicsQueue);
 }
 
 void VulkanModule::CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height) {
-	vk::CommandBuffer commandBuffer = BeginSingleTimeCommands();
+	vk::CommandBuffer commandBuffer = commandPoolManager->BeginSingleTimeCommands();
 
 	vk::BufferImageCopy region(0, 0, 0, vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
 		{ 0, 0, 0 }, { width, height, 1 });
 
 	commandBuffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, { region });
 
-	EndSingleTimeCommands(commandBuffer);
+	commandPoolManager->EndSingleTimeCommands(commandBuffer, graphicsQueue);
 }
 
 void VulkanModule::CreateDescriptorSetLayout(void) {
@@ -842,19 +793,6 @@ void VulkanModule::CreateFrameBuffers(void) {
 	}
 }
 
-// TODO: Look into moving command pool/command buffer stuff to separate classes
-// TODO: Return value? - Same for all of these "create" methods
-void VulkanModule::CreateCommandPool(void) {
-	QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(physicalDevice);
-
-	try {
-		commandPool = device.createCommandPool(vk::CommandPoolCreateInfo({}, queueFamilyIndices.graphicsFamily.value()));
-	}
-	catch (std::runtime_error err) {
-		throw VulkanException("failed to create command pool!");
-	}
-}
-
 std::pair<vk::Buffer, vma::Allocation> VulkanModule::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
 	vk::MemoryPropertyFlags properties)
 {
@@ -872,11 +810,11 @@ std::pair<vk::Buffer, vma::Allocation> VulkanModule::CreateBuffer(vk::DeviceSize
 }
 
 void VulkanModule::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size) {
-	vk::CommandBuffer commandBuffer = BeginSingleTimeCommands();
+	vk::CommandBuffer commandBuffer = commandPoolManager->BeginSingleTimeCommands();
 
 	commandBuffer.copyBuffer(srcBuffer, dstBuffer, { vk::BufferCopy(0, 0, size) });
 
-	EndSingleTimeCommands(commandBuffer);
+	commandPoolManager->EndSingleTimeCommands(commandBuffer, graphicsQueue);
 }
 
 // TODO: Eventually combine vertex and index buffers into same buffer - see if we can combine multiple buffers too?
@@ -982,54 +920,6 @@ void VulkanModule::LoadModel(void) {
 			indices.push_back(uniqueVertices[vertex]);
 		}
 	}*/
-}
-
-void VulkanModule::CreateCommandBuffers(void) {
-	commandBuffers.resize(swapChainFramebuffers.size());
-
-	vk::CommandBufferAllocateInfo allocInfo(commandPool, vk::CommandBufferLevel::ePrimary, (uint32_t)commandBuffers.size());
-
-	commandBuffers = device.allocateCommandBuffers(allocInfo);
-
-	for (size_t i = 0; i < commandBuffers.size(); i++) {
-		try {
-			commandBuffers[i].begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eSimultaneousUse));
-		}
-		catch (std::runtime_error err) {
-			throw VulkanException("failed to begin recording command buffer!");
-		}
-
-		std::array<vk::ClearValue, 2> clearValues = {
-			vk::ClearValue(vk::ClearColorValue(std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f})),
-			vk::ClearValue(vk::ClearDepthStencilValue(1.0f, 0))
-		};
-
-		vk::RenderPassBeginInfo renderPassInfo(renderPass, swapChainFramebuffers[i], vk::Rect2D({ 0, 0 }, swapChainExtent),
-			static_cast<uint32_t>(clearValues.size()), clearValues.data());
-
-		commandBuffers[i].beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-
-		commandBuffers[i].bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
-
-		for (auto& vertexObject : vertexObjects) {
-			// Bind vertices and indices - https://www.reddit.com/r/vulkan/comments/69qqe0/variable_number_of_vertex_buffers/
-			commandBuffers[i].bindVertexBuffers(0, { vertexObject.GetVertexBuffer() }, { 0 });
-			commandBuffers[i].bindIndexBuffer(vertexObject.GetIndexBuffer(), 0, vk::IndexType::eUint32);
-			// Bind 'descriptor sets' textures etc?
-			commandBuffers[i].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, { descriptorSets[i] }, nullptr);
-
-			commandBuffers[i].drawIndexed(static_cast<uint32_t>(vertexObject.GetIndices().size()), 1, 0, 0, 0);
-		}
-
-		commandBuffers[i].endRenderPass();
-
-		try {
-			commandBuffers[i].end();
-		}
-		catch (std::runtime_error err) {
-			throw VulkanException("failed to record command buffer!");
-		}
-	}
 }
 
 void VulkanModule::CreateSyncObjects(void) {
@@ -1154,7 +1044,7 @@ void VulkanModule::CleanupSwapChain(void) {
 		vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
 	}
 
-	device.freeCommandBuffers(commandPool, commandBuffers);
+	commandPoolManager->FreeCommandBuffers(commandBuffers);
 
 	vkDestroyPipeline(device, graphicsPipeline, nullptr);
 	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
@@ -1195,7 +1085,17 @@ void VulkanModule::RecreateSwapChain(void) {
 	CreateUniformBuffers();
 	CreateDescriptorPool();
 	CreateDescriptorSets();
-	CreateCommandBuffers();
+
+	commandPoolManager->CreateCommandBuffers(
+		commandBuffers,
+		vertexObjects,
+		swapChainFramebuffers,
+		renderPass,
+		swapChainExtent,
+		graphicsPipeline,
+		pipelineLayout,
+		descriptorSets
+	);
 }
 
 void VulkanModule::RunMainLoop(void) {
@@ -1288,6 +1188,7 @@ void VulkanModule::CreateDescriptorPool(void) {
 	descriptorPool = device.createDescriptorPool(poolInfo);
 }
 
+// TODO: Move these into something else, material construction
 void VulkanModule::CreateDescriptorSets(void) {
 	std::vector<vk::DescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
 

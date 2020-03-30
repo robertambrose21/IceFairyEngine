@@ -20,6 +20,7 @@
 #include "ecs/components/vertexobjectcomponent.h"
 #include "ecs/entityregistry.h"
 
+// TODO: Reconsider this
 #define ICE_FAIRY_TREAT_VERBOSE_AS_DEBUG true
 
 /*
@@ -37,6 +38,14 @@
  * - Load models
  * - Global exception catching
  * - Attach shader modules to the vulkan module - as a submodule maybe?
+ * - Convert vulkan debugging to hpp
+ * - Consider creating an "ApplicationContext" class which can be accessed from anywhere (singleton?). This could do the following:
+ *  - Hold all modules?
+ *  - Hold the ECS
+ *  - Contain various always available utilities (e.g. registered module names).
+ *  - Could be used to access modules (lazy initialisation maybe?) if unable to do so could then throw a helpful error message
+ *	- Hold a VulkanContext object?
+ * - Creation functions should return something which can be assigned
  */
 
 class DemoApplication :

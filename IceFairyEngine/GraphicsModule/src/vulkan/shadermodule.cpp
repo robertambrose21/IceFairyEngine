@@ -21,6 +21,7 @@ void ShaderModule::LoadFromFile(const std::string& vertexShader, const std::stri
 	isLoaded = true;
 }
 
+// TODO: Check if we can auto clean this up
 void ShaderModule::CleanUp(void) {
 	device.destroyShaderModule(vertexShaderModule, nullptr);
 	device.destroyShaderModule(fragmentShaderModule, nullptr);
