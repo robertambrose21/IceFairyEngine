@@ -403,7 +403,7 @@ vk::ImageView VulkanModule::CreateImageView(vk::Image image, vk::Format format, 
 void VulkanModule::CreateTextureImage(void) {
 	int texWidth, texHeight, texChannels;
 	stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-	vk::DeviceSize imageSize = texWidth * texHeight * 4;
+	vk::DeviceSize imageSize = (uint64_t) texWidth * texHeight * 4;
 	mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
 
 	if (!pixels) {

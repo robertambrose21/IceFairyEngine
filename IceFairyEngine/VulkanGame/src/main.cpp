@@ -46,6 +46,7 @@
  *  - Could be used to access modules (lazy initialisation maybe?) if unable to do so could then throw a helpful error message
  *	- Hold a VulkanContext object?
  * - Creation functions should return something which can be assigned
+ * - Fix VS2019 related warnings
  */
 
 class DemoApplication :
