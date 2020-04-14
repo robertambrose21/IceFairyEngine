@@ -6,8 +6,6 @@
 
 #include "vulkanmodule.h"
 
-using namespace IceFairy;
-
 const std::vector<const char*> validationLayers = {
 	"VK_LAYER_LUNARG_standard_validation"
 };
@@ -68,12 +66,11 @@ bool CheckValidationLayerSupport(void) {
 	return true;
 }
 
-VulkanModule::VulkanModule() :
-	Module()
+IceFairy::VulkanModule::VulkanModule() : Module()
 { }
 
 // TODO: Catch VulkanExceptions and do stuff sensibly with them
-void VulkanModule::CheckPreconditions(void) {
+void IceFairy::VulkanModule::CheckPreconditions(void) {
 	if (windowWidth == 0) {
 		throw VulkanException("Window width has not been set (currently 0)");
 	}
@@ -87,7 +84,7 @@ std::string IceFairy::VulkanModule::GetName(void) const {
 	return Constants::VulkanModuleName;
 }
 
-bool VulkanModule::Initialise(void) {
+bool IceFairy::VulkanModule::Initialise(void) {
 	CheckPreconditions();
 
 	InitialiseWindow();
@@ -137,7 +134,7 @@ bool VulkanModule::Initialise(void) {
 }
 
 // TODO: Proper clean up
-void VulkanModule::CleanUp(void) {
+void IceFairy::VulkanModule::CleanUp(void) {
 	CleanupSwapChain();
 
 	vkDestroySampler(device, textureSampler, nullptr);
@@ -174,16 +171,16 @@ void VulkanModule::CleanUp(void) {
 	glfwTerminate();
 }
 
-void VulkanModule::StartMainLoop(void) {
+void IceFairy::VulkanModule::StartMainLoop(void) {
 	RunMainLoop();
 }
 
 static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-	auto vulkanModule = reinterpret_cast<VulkanModule*>(glfwGetWindowUserPointer(window));
+	auto vulkanModule = reinterpret_cast<IceFairy::VulkanModule*>(glfwGetWindowUserPointer(window));
 	vulkanModule->SetIsFrameBufferResized(true);
 }
 
-void VulkanModule::InitialiseWindow(void) {
+void IceFairy::VulkanModule::InitialiseWindow(void) {
 	glfwInit();
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -194,7 +191,7 @@ void VulkanModule::InitialiseWindow(void) {
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
-void VulkanModule::AddVertexObject(const VertexObject& vertexObject) {
+void IceFairy::VulkanModule::AddVertexObject(const VertexObject& vertexObject) {
 	vertexObjects.push_back(vertexObject);
 }
 
@@ -218,11 +215,11 @@ GLFWwindow* IceFairy::VulkanModule::GetWindow(void) {
 	return window;
 }
 
-void VulkanModule::SetIsFrameBufferResized(const bool& value) {
+void IceFairy::VulkanModule::SetIsFrameBufferResized(const bool& value) {
 	this->isFrameBufferResized = value;
 }
 
-void VulkanModule::InitialiseVulkanInstance(void) {
+void IceFairy::VulkanModule::InitialiseVulkanInstance(void) {
 	if (enableValidationLayers && !CheckValidationLayerSupport()) {
 		throw VulkanException("validation layers requested, but not available!");
 	}
@@ -248,13 +245,13 @@ void VulkanModule::InitialiseVulkanInstance(void) {
 	}
 }
 
-void VulkanModule::CreateSurface(void) {
+void IceFairy::VulkanModule::CreateSurface(void) {
 	if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
 		throw VulkanException("failed to create window surface!");
 	}
 }
 
-void VulkanModule::CreateSwapChain(void) {
+void IceFairy::VulkanModule::CreateSwapChain(void) {
 	SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(physicalDevice);
 
 	vk::SurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -289,12 +286,11 @@ void VulkanModule::CreateSwapChain(void) {
 	createInfo.clipped = VK_TRUE;
 	createInfo.oldSwapchain = nullptr;
 
-	// TODO: Catch globally
 	try {
 		swapChain = device.createSwapchainKHR(createInfo);
 	}
 	catch (std::runtime_error err) {
-		throw VulkanException("failed to create swap chain!");
+		throw VulkanException(std::string("Failed to create swap chain: ") + err.what());
 	}
 
 	swapChainImages = device.getSwapchainImagesKHR(swapChain);
@@ -303,7 +299,7 @@ void VulkanModule::CreateSwapChain(void) {
 	swapChainExtent = extent;
 }
 
-void VulkanModule::PickPhysicalDevice(void) {
+void IceFairy::VulkanModule::PickPhysicalDevice(void) {
 	std::vector<vk::PhysicalDevice> devices = instance.enumeratePhysicalDevices();
 
 	if (devices.empty()) {
@@ -321,7 +317,7 @@ void VulkanModule::PickPhysicalDevice(void) {
 	throw VulkanException("failed to find a suitable GPU!");
 }
 
-bool VulkanModule::IsDeviceSuitable(vk::PhysicalDevice device) {
+bool IceFairy::VulkanModule::IsDeviceSuitable(vk::PhysicalDevice device) {
 	QueueFamily::Indices indices = QueueFamily(device, surface).FindQueueFamilies();
 
 	bool extensionsSupported = CheckDeviceExtensionSupport(device);
@@ -337,7 +333,7 @@ bool VulkanModule::IsDeviceSuitable(vk::PhysicalDevice device) {
 	return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
 }
 
-void VulkanModule::CreateLogicalDevice(void) {
+void IceFairy::VulkanModule::CreateLogicalDevice(void) {
 	QueueFamily::Indices indices = QueueFamily(physicalDevice, surface).FindQueueFamilies();
 
 	std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
@@ -363,23 +359,22 @@ void VulkanModule::CreateLogicalDevice(void) {
 	vk::DeviceCreateInfo createInfo({}, static_cast<uint32_t>(queueCreateInfos.size()), queueCreateInfos.data(), enabledLayerCount,
 		enabledLayerNames, static_cast<uint32_t>(deviceExtensions.size()), deviceExtensions.data(), &deviceFeatures);
 
-	// TODO: Catch globally
 	try {
 		device = physicalDevice.createDevice(createInfo);
 	}
 	catch (std::runtime_error err) {
-		throw VulkanException("failed to create logical device!");
+		throw VulkanException(std::string("Failed to create logical device: ") + err.what());
 	}
 
 	graphicsQueue = device.getQueue(indices.graphicsFamily.value(), 0);
 	presentQueue = device.getQueue(indices.presentFamily.value(), 0);
 }
 
-void VulkanModule::CreateMemoryAllocator(void) {
+void IceFairy::VulkanModule::CreateMemoryAllocator(void) {
 	allocator = vma::createAllocator(vma::AllocatorCreateInfo({}, physicalDevice, device));
 }
 
-void VulkanModule::CreateImageViews(void) {
+void IceFairy::VulkanModule::CreateImageViews(void) {
 	swapChainImageViews.resize(swapChainImages.size());
 
 	for (uint32_t i = 0; i < swapChainImages.size(); i++) {
@@ -387,20 +382,19 @@ void VulkanModule::CreateImageViews(void) {
 	}
 }
 
-vk::ImageView VulkanModule::CreateImageView(vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags, uint32_t mipLevels) {
+vk::ImageView IceFairy::VulkanModule::CreateImageView(vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags, uint32_t mipLevels) {
 	vk::ImageViewCreateInfo viewInfo({}, image, vk::ImageViewType::e2D, format, {}, vk::ImageSubresourceRange(aspectFlags, 0, mipLevels, 0, 1));
 
-	// TODO: Catch globally
 	try {
 		return device.createImageView(viewInfo);
 	}
 	catch (std::runtime_error err) {
-		throw VulkanException("failed to create texture image view!");
+		throw VulkanException(std::string("Failed to create texture image view: ") + err.what());
 	}
 }
 
 // TODO: We probably want to move texture creation to another class
-void VulkanModule::CreateTextureImage(void) {
+void IceFairy::VulkanModule::CreateTextureImage(void) {
 	int texWidth, texHeight, texChannels;
 	stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 	vk::DeviceSize imageSize = (uint64_t) texWidth * texHeight * 4;
@@ -434,7 +428,7 @@ void VulkanModule::CreateTextureImage(void) {
 	allocator.destroyBuffer(stagingBuffer, stagingAllocation);
 }
 
-void VulkanModule::GenerateMipmaps(vk::Image image, vk::Format imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels) {
+void IceFairy::VulkanModule::GenerateMipmaps(vk::Image image, vk::Format imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels) {
 	vk::FormatProperties formatProperties = physicalDevice.getFormatProperties(imageFormat);
 
 	if (!(formatProperties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImageFilterLinear)) {
@@ -509,11 +503,11 @@ void VulkanModule::GenerateMipmaps(vk::Image image, vk::Format imageFormat, int3
 	commandPoolManager->EndSingleTimeCommands(commandBuffer, graphicsQueue);
 }
 
-void VulkanModule::CreateTextureImageView(void) {
+void IceFairy::VulkanModule::CreateTextureImageView(void) {
 	textureImageView = CreateImageView(textureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageAspectFlagBits::eColor, mipLevels);
 }
 
-void VulkanModule::CreateTextureSampler(void) {
+void IceFairy::VulkanModule::CreateTextureSampler(void) {
 	vk::SamplerCreateInfo samplerInfo({}, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear,
 		vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, 0.0f, VK_TRUE,
 		16.0f, VK_FALSE, vk::CompareOp::eAlways, 0, static_cast<float>(mipLevels));
@@ -526,7 +520,7 @@ void VulkanModule::CreateTextureSampler(void) {
 	}
 }
 
-vk::SampleCountFlagBits VulkanModule::GetMaxUsableSampleCount(void) {
+vk::SampleCountFlagBits IceFairy::VulkanModule::GetMaxUsableSampleCount(void) {
 	vk::PhysicalDeviceProperties physicalDeviceProperties = physicalDevice.getProperties();
 	vk::SampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
 
@@ -540,7 +534,7 @@ vk::SampleCountFlagBits VulkanModule::GetMaxUsableSampleCount(void) {
 	return vk::SampleCountFlagBits::e1;
 }
 
-void VulkanModule::CreateColorResources(void) {
+void IceFairy::VulkanModule::CreateColorResources(void) {
 	vk::Format colorFormat = swapChainImageFormat;
 
 	CreateImage(swapChainExtent.width, swapChainExtent.height, 1, msaaSamples, colorFormat, vk::ImageTiling::eOptimal,
@@ -549,34 +543,32 @@ void VulkanModule::CreateColorResources(void) {
 	colorImageView = CreateImageView(colorImage, colorFormat, vk::ImageAspectFlagBits::eColor, 1);
 }
 
-void VulkanModule::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling,
+void IceFairy::VulkanModule::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling,
 		vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::Image& image, vma::Allocation& imageMemory) {
 	vk::ImageCreateInfo imageInfo({}, vk::ImageType::e2D, format, vk::Extent3D(width, height, 1), mipLevels, 1,
 		numSamples, tiling, usage, vk::SharingMode::eExclusive, 0, nullptr, vk::ImageLayout::eUndefined);
 
-	// TODO: Catch globally
 	try {
 		image = device.createImage(imageInfo);
 	}
 	catch (std::runtime_error err) {
-		throw VulkanException("failed to create image!");
+		throw VulkanException(std::string("Failed to create image: ") + err.what());
 	}
 
 	vk::MemoryRequirements memRequirements = device.getImageMemoryRequirements(image);
 
-	// TODO: Catch globally
 	try {
 		imageMemory = allocator.allocateMemory(memRequirements, vma::AllocationCreateInfo({}, vma::MemoryUsage::eGpuOnly, properties));
 	}
 	catch (std::runtime_error err) {
-		throw VulkanException("failed to allocate image memory!");
+		throw VulkanException(std::string("Failed to allocate image memory: ") + err.what());
 	}
 
 	allocator.bindImageMemory(imageMemory, image);
 }
 
 // TODO: Find out what the fuck is going on in this method
-void VulkanModule::TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t mipLevels) {
+void IceFairy::VulkanModule::TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t mipLevels) {
 	vk::CommandBuffer commandBuffer = commandPoolManager->BeginSingleTimeCommands();
 
 	vk::PipelineStageFlags sourceStage;
@@ -632,7 +624,7 @@ void VulkanModule::TransitionImageLayout(vk::Image image, vk::Format format, vk:
 	commandPoolManager->EndSingleTimeCommands(commandBuffer, graphicsQueue);
 }
 
-void VulkanModule::CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height) {
+void IceFairy::VulkanModule::CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height) {
 	vk::CommandBuffer commandBuffer = commandPoolManager->BeginSingleTimeCommands();
 
 	vk::BufferImageCopy region(0, 0, 0, vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, 0, 0, 1),
@@ -643,7 +635,7 @@ void VulkanModule::CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32_
 	commandPoolManager->EndSingleTimeCommands(commandBuffer, graphicsQueue);
 }
 
-void VulkanModule::CreateDescriptorSetLayout(void) {
+void IceFairy::VulkanModule::CreateDescriptorSetLayout(void) {
 	vk::DescriptorSetLayoutBinding uboLayoutBinding(0, vk::DescriptorType::eUniformBuffer, 1,
 		vk::ShaderStageFlagBits::eVertex);
 	vk::DescriptorSetLayoutBinding samplerLayoutBinding(1, vk::DescriptorType::eCombinedImageSampler, 1,
@@ -661,7 +653,7 @@ void VulkanModule::CreateDescriptorSetLayout(void) {
 	}
 }
 
-void VulkanModule::CreateUniformBuffers(void) {
+void IceFairy::VulkanModule::CreateUniformBuffers(void) {
 	vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
 
 	uniformBuffers.resize(swapChainImages.size());
@@ -673,7 +665,7 @@ void VulkanModule::CreateUniformBuffers(void) {
 }
 
 // Binds shaders and position/colour/texture coords
-void VulkanModule::CreateGraphicsPipeline(void) {
+void IceFairy::VulkanModule::CreateGraphicsPipeline(void) {
 	ShaderModule module(device);
 
 	// TODO: Move elsewhere
@@ -735,7 +727,7 @@ void VulkanModule::CreateGraphicsPipeline(void) {
 	}
 }
 
-void VulkanModule::CreateRenderPass(void) {
+void IceFairy::VulkanModule::CreateRenderPass(void) {
 	vk::AttachmentDescription attachments[3];
 
 	attachments[0] = vk::AttachmentDescription({}, swapChainImageFormat, msaaSamples, vk::AttachmentLoadOp::eClear,
@@ -770,7 +762,7 @@ void VulkanModule::CreateRenderPass(void) {
 	}
 }
 
-void VulkanModule::CreateFrameBuffers(void) {
+void IceFairy::VulkanModule::CreateFrameBuffers(void) {
 	swapChainFramebuffers.resize(swapChainImageViews.size());
 
 	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
@@ -793,7 +785,7 @@ void VulkanModule::CreateFrameBuffers(void) {
 	}
 }
 
-std::pair<vk::Buffer, vma::Allocation> VulkanModule::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
+std::pair<vk::Buffer, vma::Allocation> IceFairy::VulkanModule::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
 	vk::MemoryPropertyFlags properties)
 {
 	vk::BufferCreateInfo bufferInfo({}, size, usage, vk::SharingMode::eExclusive);
@@ -809,7 +801,7 @@ std::pair<vk::Buffer, vma::Allocation> VulkanModule::CreateBuffer(vk::DeviceSize
 	}
 }
 
-void VulkanModule::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size) {
+void IceFairy::VulkanModule::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size) {
 	vk::CommandBuffer commandBuffer = commandPoolManager->BeginSingleTimeCommands();
 
 	commandBuffer.copyBuffer(srcBuffer, dstBuffer, { vk::BufferCopy(0, 0, size) });
@@ -818,7 +810,7 @@ void VulkanModule::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::De
 }
 
 // TODO: Eventually combine vertex and index buffers into same buffer - see if we can combine multiple buffers too?
-void VulkanModule::CreateVertexBuffer(VertexObject& vertexObject) {
+void IceFairy::VulkanModule::CreateVertexBuffer(VertexObject& vertexObject) {
 	vk::DeviceSize bufferSize = sizeof(vertexObject.GetVertices()[0]) * vertexObject.GetVertices().size();
 
 	auto [stagingBuffer, stagingAllocation] = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc,
@@ -845,7 +837,7 @@ void VulkanModule::CreateVertexBuffer(VertexObject& vertexObject) {
 	allocator.destroyBuffer(stagingBuffer, stagingAllocation);
 }
 
-void VulkanModule::CreateIndexBuffer(VertexObject& vertexObject) {
+void IceFairy::VulkanModule::CreateIndexBuffer(VertexObject& vertexObject) {
 	vk::DeviceSize bufferSize = sizeof(vertexObject.GetIndices()[0]) * vertexObject.GetIndices().size();
 
 	auto [stagingBuffer, stagingAllocation] = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible |
@@ -869,7 +861,7 @@ void VulkanModule::CreateIndexBuffer(VertexObject& vertexObject) {
 
 // TODO: Do we need this anymore? VMA seems to handle it. Might want to look into the docs and vulkan tutorial to find out
 // exactly what's going on here.
-uint32_t VulkanModule::FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) {
+uint32_t IceFairy::VulkanModule::FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) {
 	vk::PhysicalDeviceMemoryProperties memProperties = physicalDevice.getMemoryProperties();
 
 	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
@@ -883,7 +875,7 @@ uint32_t VulkanModule::FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFla
 }
 
 // TODO: Temporarily disabled
-void VulkanModule::LoadModel(void) {
+void IceFairy::VulkanModule::LoadModel(void) {
 	/*tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
@@ -922,7 +914,7 @@ void VulkanModule::LoadModel(void) {
 	}*/
 }
 
-void VulkanModule::CreateSyncObjects(void) {
+void IceFairy::VulkanModule::CreateSyncObjects(void) {
 	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -948,7 +940,7 @@ void VulkanModule::CreateSyncObjects(void) {
 	}
 }
 
-std::vector<const char*> VulkanModule::GetRequiredExtensions(void) {
+std::vector<const char*> IceFairy::VulkanModule::GetRequiredExtensions(void) {
 	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions;
 	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -962,7 +954,7 @@ std::vector<const char*> VulkanModule::GetRequiredExtensions(void) {
 	return extensions;
 }
 
-bool VulkanModule::CheckDeviceExtensionSupport(vk::PhysicalDevice device) {
+bool IceFairy::VulkanModule::CheckDeviceExtensionSupport(vk::PhysicalDevice device) {
 	std::vector<vk::ExtensionProperties> availableExtensions = device.enumerateDeviceExtensionProperties();
 
 	std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
@@ -974,7 +966,7 @@ bool VulkanModule::CheckDeviceExtensionSupport(vk::PhysicalDevice device) {
 	return requiredExtensions.empty();
 }
 
-VulkanModule::SwapChainSupportDetails VulkanModule::QuerySwapChainSupport(vk::PhysicalDevice device) {
+IceFairy::VulkanModule::SwapChainSupportDetails IceFairy::VulkanModule::QuerySwapChainSupport(vk::PhysicalDevice device) {
 	// TODO: Constructor for this
 	SwapChainSupportDetails details;
 
@@ -985,7 +977,7 @@ VulkanModule::SwapChainSupportDetails VulkanModule::QuerySwapChainSupport(vk::Ph
 	return details;
 }
 
-vk::SurfaceFormatKHR VulkanModule::ChooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats) {
+vk::SurfaceFormatKHR IceFairy::VulkanModule::ChooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats) {
 	if (availableFormats.size() == 1 && availableFormats[0].format == vk::Format::eUndefined) {
 		return { vk::Format::eB8G8R8A8Unorm, vk::ColorSpaceKHR::eSrgbNonlinear };
 	}
@@ -999,7 +991,7 @@ vk::SurfaceFormatKHR VulkanModule::ChooseSwapSurfaceFormat(const std::vector<vk:
 	return availableFormats[0];
 }
 
-vk::PresentModeKHR VulkanModule::ChooseSwapPresentMode(const std::vector<vk::PresentModeKHR> availablePresentModes) {
+vk::PresentModeKHR IceFairy::VulkanModule::ChooseSwapPresentMode(const std::vector<vk::PresentModeKHR> availablePresentModes) {
 	vk::PresentModeKHR bestMode = vk::PresentModeKHR::eFifo;
 
 	for (const auto& availablePresentMode : availablePresentModes) {
@@ -1014,7 +1006,7 @@ vk::PresentModeKHR VulkanModule::ChooseSwapPresentMode(const std::vector<vk::Pre
 	return bestMode;
 }
 
-vk::Extent2D VulkanModule::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR & capabilities) {
+vk::Extent2D IceFairy::VulkanModule::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR & capabilities) {
 	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
 		return capabilities.currentExtent;
 	}
@@ -1033,7 +1025,7 @@ vk::Extent2D VulkanModule::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR & c
 	return actualExtent;
 }
 
-void VulkanModule::CleanupSwapChain(void) {
+void IceFairy::VulkanModule::CleanupSwapChain(void) {
 	vkDestroyImageView(device, colorImageView, nullptr);
 	allocator.destroyImage(colorImage, colorImageMemory);
 
@@ -1063,7 +1055,7 @@ void VulkanModule::CleanupSwapChain(void) {
 	vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 }
 
-void VulkanModule::RecreateSwapChain(void) {
+void IceFairy::VulkanModule::RecreateSwapChain(void) {
 	// TODO: This while is when the window is minimized - wait until we unminimize. Separate function might be nice
 	int width = 0, height = 0;
 	while (width == 0 || height == 0) {
@@ -1098,7 +1090,7 @@ void VulkanModule::RecreateSwapChain(void) {
 	);
 }
 
-void VulkanModule::RunMainLoop(void) {
+void IceFairy::VulkanModule::RunMainLoop(void) {
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 		DrawFrame();
@@ -1107,7 +1099,7 @@ void VulkanModule::RunMainLoop(void) {
 	vkDeviceWaitIdle(device);
 }
 
-void VulkanModule::DrawFrame(void) {
+void IceFairy::VulkanModule::DrawFrame(void) {
 	device.waitForFences({ inFlightFences[currentFrame] }, VK_TRUE, std::numeric_limits<uint64_t>::max());
 
 	uint32_t imageIndex;
@@ -1153,7 +1145,7 @@ void VulkanModule::DrawFrame(void) {
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void VulkanModule::UpdateUniformBuffer(uint32_t currentImage) {
+void IceFairy::VulkanModule::UpdateUniformBuffer(uint32_t currentImage) {
 	static auto startTime = std::chrono::high_resolution_clock::now();
 
 	auto currentTime = std::chrono::high_resolution_clock::now();
@@ -1176,7 +1168,7 @@ void VulkanModule::UpdateUniformBuffer(uint32_t currentImage) {
 	allocator.unmapMemory(uniformBuffers[currentImage].second);
 }
 
-void VulkanModule::CreateDescriptorPool(void) {
+void IceFairy::VulkanModule::CreateDescriptorPool(void) {
 	std::array<vk::DescriptorPoolSize, 2> poolSizes = {
 		vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, static_cast<uint32_t>(swapChainImages.size())),
 		vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, static_cast<uint32_t>(swapChainImages.size()))
@@ -1189,7 +1181,7 @@ void VulkanModule::CreateDescriptorPool(void) {
 }
 
 // TODO: Move these into something else, material construction
-void VulkanModule::CreateDescriptorSets(void) {
+void IceFairy::VulkanModule::CreateDescriptorSets(void) {
 	std::vector<vk::DescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
 
 	vk::DescriptorSetAllocateInfo allocInfo(descriptorPool, static_cast<uint32_t>(swapChainImages.size()), layouts.data());
@@ -1215,7 +1207,7 @@ void VulkanModule::CreateDescriptorSets(void) {
 	}
 }
 
-void VulkanModule::CreateDepthResources(void) {
+void IceFairy::VulkanModule::CreateDepthResources(void) {
 	vk::Format depthFormat = FindDepthFormat();
 
 	CreateImage(swapChainExtent.width, swapChainExtent.height, 1, msaaSamples, depthFormat, vk::ImageTiling::eOptimal,
@@ -1224,7 +1216,7 @@ void VulkanModule::CreateDepthResources(void) {
 	TransitionImageLayout(depthImage, depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, 1);
 }
 
-vk::Format VulkanModule::FindSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features) {
+vk::Format IceFairy::VulkanModule::FindSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features) {
 	for (vk::Format format : candidates) {
 		vk::FormatProperties props = physicalDevice.getFormatProperties(format);
 
@@ -1239,18 +1231,18 @@ vk::Format VulkanModule::FindSupportedFormat(const std::vector<vk::Format>& cand
 	throw VulkanException("failed to find supported format!");
 }
 
-vk::Format VulkanModule::FindDepthFormat(void) {
+vk::Format IceFairy::VulkanModule::FindDepthFormat(void) {
 	return FindSupportedFormat(
 		{ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint },
 		vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment
 	);
 }
 
-bool VulkanModule::HasStencilComponent(vk::Format format) {
+bool IceFairy::VulkanModule::HasStencilComponent(vk::Format format) {
 	return format == vk::Format::eD32SfloatS8Uint|| format == vk::Format::eD24UnormS8Uint;
 }
 
-void VulkanModule::SetupDebugCallback(void) {
+void IceFairy::VulkanModule::SetupDebugCallback(void) {
 	if (!enableValidationLayers)
 		return;
 

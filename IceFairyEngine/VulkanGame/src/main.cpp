@@ -36,7 +36,6 @@
  * - Tests
  * - Device unique instance if possible
  * - Load models
- * - Global exception catching
  * - Attach shader modules to the vulkan module - as a submodule maybe?
  * - Convert vulkan debugging to hpp
  * - Consider creating an "ApplicationContext" class which can be accessed from anywhere (singleton?). This could do the following:
@@ -146,10 +145,8 @@ int main(int argc, char** argv) {
 		app->Initialise();
 		app->StartMainLoop();
 	}
-	catch (const std::exception& e) {
-		std::cout << e.what() << std::endl;
-		std::cout << "m8 you left both logging on" << std::endl;
-		//IceFairy::Logger::PrintLn(IceFairy::Logger::LEVEL_ERROR, e.what());
+	catch (const IceFairy::ICException& e) {
+		IceFairy::Logger::PrintLn(IceFairy::Logger::LEVEL_ERROR, e.what());
 		return EXIT_FAILURE;
 	}
 

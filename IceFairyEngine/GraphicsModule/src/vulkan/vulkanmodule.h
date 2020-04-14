@@ -227,7 +227,6 @@ namespace IceFairy {
 
 		void SetupDebugCallback(void);
 
-		// TODO: convert to hpp
 		static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 			VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 			void* pUserData)
