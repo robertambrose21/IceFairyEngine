@@ -7,6 +7,7 @@
 #include "vulkanexception.h"
 #include "queuefamily.h"
 #include "vertexobject.h"
+#include "vulkandevice.h"
 
 namespace IceFairy {
 
@@ -19,7 +20,7 @@ namespace IceFairy {
 	*/
 	class CommandPoolManager {
 	public:
-		CommandPoolManager(vk::Device deviceHandle, vk::PhysicalDevice physicalDeviceHandle, VkSurfaceKHR surfaceHandle);
+		CommandPoolManager(std::shared_ptr<VulkanDevice> deviceHandle, vk::PhysicalDevice physicalDeviceHandle, VkSurfaceKHR surfaceHandle);
 		
 		void CleanUp(void);
 
@@ -37,12 +38,12 @@ namespace IceFairy {
 		void FreeCommandBuffers(std::vector<vk::CommandBuffer>& commandBuffers);
 
 		vk::CommandBuffer BeginSingleTimeCommands(void);
-		void EndSingleTimeCommands(vk::CommandBuffer commandBuffer, vk::Queue graphicsQueue);
+		void EndSingleTimeCommands(vk::CommandBuffer commandBuffer);
 
 	private:
 		void CreateCommandPool(void);
 
-		vk::Device deviceHandle;
+		std::shared_ptr<VulkanDevice> deviceHandle;
 		vk::PhysicalDevice physicalDeviceHandle;
 		VkSurfaceKHR surfaceHandle;
 

@@ -1,6 +1,6 @@
 #include "commandpoolmanager.h"
 
-IceFairy::CommandPoolManager::CommandPoolManager(vk::Device deviceHandle, vk::PhysicalDevice physicalDeviceHandle, VkSurfaceKHR surfaceHandle) :
+IceFairy::CommandPoolManager::CommandPoolManager(std::shared_ptr<VulkanDevice> deviceHandle, vk::PhysicalDevice physicalDeviceHandle, VkSurfaceKHR surfaceHandle) :
 	deviceHandle(deviceHandle),
 	physicalDeviceHandle(physicalDeviceHandle),
 	surfaceHandle(surfaceHandle)
@@ -10,7 +10,7 @@ IceFairy::CommandPoolManager::CommandPoolManager(vk::Device deviceHandle, vk::Ph
 
 void IceFairy::CommandPoolManager::CleanUp(void) {
 	if (commandPool) {
-		vkDestroyCommandPool(deviceHandle, commandPool, nullptr);
+		deviceHandle->GetDevice()->destroyCommandPool(commandPool, nullptr);
 	}
 }
 
@@ -27,7 +27,7 @@ void IceFairy::CommandPoolManager::CreateCommandBuffers(
 
 	vk::CommandBufferAllocateInfo allocInfo(commandPool, vk::CommandBufferLevel::ePrimary, (uint32_t)commandBuffers.size());
 
-	commandBuffers = deviceHandle.allocateCommandBuffers(allocInfo);
+	commandBuffers = deviceHandle->GetDevice()->allocateCommandBuffers(allocInfo);
 
 	for (size_t i = 0; i < commandBuffers.size(); i++) {
 		try {
@@ -71,37 +71,37 @@ void IceFairy::CommandPoolManager::CreateCommandBuffers(
 }
 
 void IceFairy::CommandPoolManager::FreeCommandBuffers(std::vector<vk::CommandBuffer>& commandBuffers) {
-	deviceHandle.freeCommandBuffers(commandPool, commandBuffers);
+	deviceHandle->GetDevice()->freeCommandBuffers(commandPool, commandBuffers);
 }
 
 vk::CommandBuffer IceFairy::CommandPoolManager::BeginSingleTimeCommands(void) {
 	vk::CommandBufferAllocateInfo allocInfo(commandPool, vk::CommandBufferLevel::ePrimary, 1);
 
 	// TODO: Supposedly you allocate all buffers at the start? - This is possibly fine due to being a "single time command"
-	vk::CommandBuffer commandBuffer = deviceHandle.allocateCommandBuffers(allocInfo).at(0);
+	vk::CommandBuffer commandBuffer = deviceHandle->GetDevice()->allocateCommandBuffers(allocInfo).at(0);
 	commandBuffer.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
 
 	return commandBuffer;
 }
 
-void IceFairy::CommandPoolManager::EndSingleTimeCommands(vk::CommandBuffer commandBuffer, vk::Queue graphicsQueue) {
+void IceFairy::CommandPoolManager::EndSingleTimeCommands(vk::CommandBuffer commandBuffer) {
 	commandBuffer.end();
 
 	vk::SubmitInfo submitInfo = {};
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &commandBuffer;
 
-	graphicsQueue.submit(1, &submitInfo, nullptr);
-	graphicsQueue.waitIdle();
+	deviceHandle->GetGraphicsQueue().submit(1, &submitInfo, nullptr);
+	deviceHandle->GetGraphicsQueue().waitIdle();
 
-	deviceHandle.freeCommandBuffers(commandPool, 1, &commandBuffer);
+	deviceHandle->GetDevice()->freeCommandBuffers(commandPool, 1, &commandBuffer);
 }
 
 void IceFairy::CommandPoolManager::CreateCommandPool(void) {
 	QueueFamily::Indices queueFamilyIndices = QueueFamily(physicalDeviceHandle, surfaceHandle).FindQueueFamilies();
 	
 	try {
-		commandPool = deviceHandle.createCommandPool(vk::CommandPoolCreateInfo({}, queueFamilyIndices.graphicsFamily.value()));
+		commandPool = deviceHandle->GetDevice()->createCommandPool(vk::CommandPoolCreateInfo({}, queueFamilyIndices.graphicsFamily.value()));
 	}
 	catch (std::runtime_error err) {
 		// TODO: custom exception

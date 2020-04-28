@@ -134,31 +134,33 @@ bool IceFairy::VulkanModule::Initialise(void) {
 }
 
 // TODO: Proper clean up
+// TODO: Device stuff potentially unneeded?
 void IceFairy::VulkanModule::CleanUp(void) {
 	CleanupSwapChain();
 
-	vkDestroySampler(device, textureSampler, nullptr);
-	vkDestroyImageView(device, textureImageView, nullptr);
+	device->GetDevice()->destroySampler(textureSampler, nullptr);
+	device->GetDevice()->destroyImageView(textureImageView, nullptr);
 
 	allocator.destroyImage(textureImage, textureImageMemory);
 
-	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+	device->GetDevice()->destroyDescriptorSetLayout(descriptorSetLayout, nullptr);
 
 	for (auto& vertexObject : vertexObjects) {
 		vertexObject.CleanUp(allocator);
 	}
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
-		vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
-		vkDestroyFence(device, inFlightFences[i], nullptr);
+		
+		device->GetDevice()->destroySemaphore(renderFinishedSemaphores[i], nullptr);
+		device->GetDevice()->destroySemaphore(imageAvailableSemaphores[i], nullptr);
+		device->GetDevice()->destroyFence(inFlightFences[i], nullptr);
 	}
 
 	commandPoolManager->CleanUp();
 
 	vmaDestroyAllocator(allocator);
 
-	vkDestroyDevice(device, nullptr);
+	device->GetDevice()->destroy();
 
 	if (enableValidationLayers) {
 		vkDestroyDebugUtilsMessengerEXT(instance, callback, nullptr);
@@ -287,13 +289,13 @@ void IceFairy::VulkanModule::CreateSwapChain(void) {
 	createInfo.oldSwapchain = nullptr;
 
 	try {
-		swapChain = device.createSwapchainKHR(createInfo);
+		swapChain = device->GetDevice()->createSwapchainKHR(createInfo);
 	}
 	catch (std::runtime_error err) {
 		throw VulkanException(std::string("Failed to create swap chain: ") + err.what());
 	}
 
-	swapChainImages = device.getSwapchainImagesKHR(swapChain);
+	swapChainImages = device->GetDevice()->getSwapchainImagesKHR(swapChain);
 
 	swapChainImageFormat = surfaceFormat.format;
 	swapChainExtent = extent;
@@ -334,44 +336,12 @@ bool IceFairy::VulkanModule::IsDeviceSuitable(vk::PhysicalDevice device) {
 }
 
 void IceFairy::VulkanModule::CreateLogicalDevice(void) {
-	QueueFamily::Indices indices = QueueFamily(physicalDevice, surface).FindQueueFamilies();
-
-	std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
-	std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
-
-	float queuePriority = 1.0f;
-	for (uint32_t queueFamily : uniqueQueueFamilies) {
-		queueCreateInfos.push_back(vk::DeviceQueueCreateInfo({}, queueFamily, 1, &queuePriority));
-	}
-
-	vk::PhysicalDeviceFeatures deviceFeatures;
-	deviceFeatures.samplerAnisotropy = true;
-	deviceFeatures.sampleRateShading = true;
-
-	uint32_t enabledLayerCount = 0;
-	const char* const* enabledLayerNames = nullptr;
-
-	if (enableValidationLayers) {
-		enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-		enabledLayerNames = validationLayers.data();
-	}
-
-	vk::DeviceCreateInfo createInfo({}, static_cast<uint32_t>(queueCreateInfos.size()), queueCreateInfos.data(), enabledLayerCount,
-		enabledLayerNames, static_cast<uint32_t>(deviceExtensions.size()), deviceExtensions.data(), &deviceFeatures);
-
-	try {
-		device = physicalDevice.createDevice(createInfo);
-	}
-	catch (std::runtime_error err) {
-		throw VulkanException(std::string("Failed to create logical device: ") + err.what());
-	}
-
-	graphicsQueue = device.getQueue(indices.graphicsFamily.value(), 0);
-	presentQueue = device.getQueue(indices.presentFamily.value(), 0);
+	// TODO: Move QueueFamily to central location so it doesn't have to be called twice, VulkanContext maybe?
+	device = std::make_shared<VulkanDevice>(physicalDevice, surface, QueueFamily(physicalDevice, surface).FindQueueFamilies());
 }
 
 void IceFairy::VulkanModule::CreateMemoryAllocator(void) {
-	allocator = vma::createAllocator(vma::AllocatorCreateInfo({}, physicalDevice, device));
+	allocator = vma::createAllocator(vma::AllocatorCreateInfo({}, physicalDevice, *device->GetDevice()));
 }
 
 void IceFairy::VulkanModule::CreateImageViews(void) {
@@ -386,7 +356,7 @@ vk::ImageView IceFairy::VulkanModule::CreateImageView(vk::Image image, vk::Forma
 	vk::ImageViewCreateInfo viewInfo({}, image, vk::ImageViewType::e2D, format, {}, vk::ImageSubresourceRange(aspectFlags, 0, mipLevels, 0, 1));
 
 	try {
-		return device.createImageView(viewInfo);
+		return device->GetDevice()->createImageView(viewInfo);
 	}
 	catch (std::runtime_error err) {
 		throw VulkanException(std::string("Failed to create texture image view: ") + err.what());
@@ -500,7 +470,7 @@ void IceFairy::VulkanModule::GenerateMipmaps(vk::Image image, vk::Format imageFo
 		0, nullptr,
 		1, &barrier);
 
-	commandPoolManager->EndSingleTimeCommands(commandBuffer, graphicsQueue);
+	commandPoolManager->EndSingleTimeCommands(commandBuffer);
 }
 
 void IceFairy::VulkanModule::CreateTextureImageView(void) {
@@ -513,7 +483,7 @@ void IceFairy::VulkanModule::CreateTextureSampler(void) {
 		16.0f, VK_FALSE, vk::CompareOp::eAlways, 0, static_cast<float>(mipLevels));
 
 	try {
-		textureSampler = device.createSampler(samplerInfo);
+		textureSampler = device->GetDevice()->createSampler(samplerInfo);
 	}
 	catch (std::runtime_error err) {
 		throw VulkanException("failed to create texture sampler!");
@@ -549,13 +519,13 @@ void IceFairy::VulkanModule::CreateImage(uint32_t width, uint32_t height, uint32
 		numSamples, tiling, usage, vk::SharingMode::eExclusive, 0, nullptr, vk::ImageLayout::eUndefined);
 
 	try {
-		image = device.createImage(imageInfo);
+		image = device->GetDevice()->createImage(imageInfo);
 	}
 	catch (std::runtime_error err) {
 		throw VulkanException(std::string("Failed to create image: ") + err.what());
 	}
 
-	vk::MemoryRequirements memRequirements = device.getImageMemoryRequirements(image);
+	vk::MemoryRequirements memRequirements = device->GetDevice()->getImageMemoryRequirements(image);
 
 	try {
 		imageMemory = allocator.allocateMemory(memRequirements, vma::AllocationCreateInfo({}, vma::MemoryUsage::eGpuOnly, properties));
@@ -621,7 +591,7 @@ void IceFairy::VulkanModule::TransitionImageLayout(vk::Image image, vk::Format f
 		0, nullptr,
 		1, &barrier);
 
-	commandPoolManager->EndSingleTimeCommands(commandBuffer, graphicsQueue);
+	commandPoolManager->EndSingleTimeCommands(commandBuffer);
 }
 
 void IceFairy::VulkanModule::CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height) {
@@ -632,7 +602,7 @@ void IceFairy::VulkanModule::CopyBufferToImage(vk::Buffer buffer, vk::Image imag
 
 	commandBuffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, { region });
 
-	commandPoolManager->EndSingleTimeCommands(commandBuffer, graphicsQueue);
+	commandPoolManager->EndSingleTimeCommands(commandBuffer);
 }
 
 void IceFairy::VulkanModule::CreateDescriptorSetLayout(void) {
@@ -646,7 +616,7 @@ void IceFairy::VulkanModule::CreateDescriptorSetLayout(void) {
 	vk::DescriptorSetLayoutCreateInfo layoutInfo({}, static_cast<uint32_t>(bindings.size()), bindings.data());
 
 	try {
-		descriptorSetLayout = device.createDescriptorSetLayout(layoutInfo);
+		descriptorSetLayout = device->GetDevice()->createDescriptorSetLayout(layoutInfo);
 	}
 	catch (std::runtime_error err) {
 		throw VulkanException("failed to create descriptor set layout!");
@@ -666,7 +636,7 @@ void IceFairy::VulkanModule::CreateUniformBuffers(void) {
 
 // Binds shaders and position/colour/texture coords
 void IceFairy::VulkanModule::CreateGraphicsPipeline(void) {
-	ShaderModule module(device);
+	ShaderModule module(*device->GetDevice());
 
 	// TODO: Move elsewhere
 	module.LoadFromFile("shaders/vert.spv", "shaders/frag.spv");
@@ -707,7 +677,7 @@ void IceFairy::VulkanModule::CreateGraphicsPipeline(void) {
 
 	// TODO: Catch globally
 	try {
-		pipelineLayout = device.createPipelineLayout(vk::PipelineLayoutCreateInfo({}, 1, &descriptorSetLayout));
+		pipelineLayout = device->GetDevice()->createPipelineLayout(vk::PipelineLayoutCreateInfo({}, 1, &descriptorSetLayout));
 	}
 	catch (std::runtime_error err) {
 		throw VulkanException("failed to create pipeline layout!");
@@ -719,7 +689,7 @@ void IceFairy::VulkanModule::CreateGraphicsPipeline(void) {
 	// TODO: Use "createGraphicsPipelines" for multiple pipelines
 	// TODO: Catch globally
 	try {
-		graphicsPipeline = device.createGraphicsPipeline({}, pipelineInfo);
+		graphicsPipeline = device->GetDevice()->createGraphicsPipeline({}, pipelineInfo);
 		module.CleanUp();
 	}
 	catch (std::runtime_error err) {
@@ -755,7 +725,7 @@ void IceFairy::VulkanModule::CreateRenderPass(void) {
 
 	// TODO: Catch globally
 	try {
-		renderPass = device.createRenderPass(vk::RenderPassCreateInfo({}, 3, attachments, 1, &subpass, 1, &dependency));
+		renderPass = device->GetDevice()->createRenderPass(vk::RenderPassCreateInfo({}, 3, attachments, 1, &subpass, 1, &dependency));
 	}
 	catch (std::runtime_error err) {
 		throw VulkanException("failed to create render pass!");
@@ -777,7 +747,7 @@ void IceFairy::VulkanModule::CreateFrameBuffers(void) {
 
 		// TODO: Sort this out
 		try {
-			swapChainFramebuffers[i] = device.createFramebuffer(framebufferInfo);
+			swapChainFramebuffers[i] = device->GetDevice()->createFramebuffer(framebufferInfo);
 		}
 		catch (std::runtime_error err) {
 			throw VulkanException("failed to create framebuffer!");
@@ -806,7 +776,7 @@ void IceFairy::VulkanModule::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuff
 
 	commandBuffer.copyBuffer(srcBuffer, dstBuffer, { vk::BufferCopy(0, 0, size) });
 
-	commandPoolManager->EndSingleTimeCommands(commandBuffer, graphicsQueue);
+	commandPoolManager->EndSingleTimeCommands(commandBuffer);
 }
 
 // TODO: Eventually combine vertex and index buffers into same buffer - see if we can combine multiple buffers too?
@@ -925,14 +895,14 @@ void IceFairy::VulkanModule::CreateSyncObjects(void) {
 	vk::FenceCreateInfo fenceInfo(vk::FenceCreateFlagBits::eSignaled);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		if (device.createSemaphore(&semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != vk::Result::eSuccess ||
-			device.createSemaphore(&semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != vk::Result::eSuccess) {
+		if (device->GetDevice()->createSemaphore(&semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != vk::Result::eSuccess ||
+			device->GetDevice()->createSemaphore(&semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != vk::Result::eSuccess) {
 
 			throw VulkanException("failed to create synchronization objects for a frame!");
 		}
 
 		try {
-			inFlightFences[i] = device.createFence(fenceInfo);
+			inFlightFences[i] = device->GetDevice()->createFence(fenceInfo);
 		}
 		catch (std::runtime_error err) {
 			throw VulkanException("failed to create synchronization objects for a frame!");
@@ -1026,33 +996,33 @@ vk::Extent2D IceFairy::VulkanModule::ChooseSwapExtent(const vk::SurfaceCapabilit
 }
 
 void IceFairy::VulkanModule::CleanupSwapChain(void) {
-	vkDestroyImageView(device, colorImageView, nullptr);
+	device->GetDevice()->destroyImageView(colorImageView, nullptr);
 	allocator.destroyImage(colorImage, colorImageMemory);
 
-	vkDestroyImageView(device, depthImageView, nullptr);
+	device->GetDevice()->destroyImageView(depthImageView, nullptr);
 	allocator.destroyImage(depthImage, depthImageMemory);
 
 	for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
-		vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
+		device->GetDevice()->destroyFramebuffer(swapChainFramebuffers[i], nullptr);
 	}
 
 	commandPoolManager->FreeCommandBuffers(commandBuffers);
 
-	vkDestroyPipeline(device, graphicsPipeline, nullptr);
-	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-	vkDestroyRenderPass(device, renderPass, nullptr);
+	device->GetDevice()->destroyPipeline(graphicsPipeline, nullptr);
+	device->GetDevice()->destroyPipelineLayout(pipelineLayout, nullptr);
+	device->GetDevice()->destroyRenderPass(renderPass, nullptr);
 
 	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-		vkDestroyImageView(device, swapChainImageViews[i], nullptr);
+		device->GetDevice()->destroyImageView(swapChainImageViews[i], nullptr);
 	}
 
-	vkDestroySwapchainKHR(device, swapChain, nullptr);
+	device->GetDevice()->destroySwapchainKHR(swapChain, nullptr);
 
 	for (size_t i = 0; i < swapChainImages.size(); i++) {
 		allocator.destroyBuffer(uniformBuffers[i].first, uniformBuffers[i].second);
 	}
 
-	vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+	device->GetDevice()->destroyDescriptorPool(descriptorPool, nullptr);
 }
 
 void IceFairy::VulkanModule::RecreateSwapChain(void) {
@@ -1063,7 +1033,7 @@ void IceFairy::VulkanModule::RecreateSwapChain(void) {
 		glfwWaitEvents();
 	}
 
-	device.waitIdle();
+	device->GetDevice()->waitIdle();
 
 	CleanupSwapChain();
 
@@ -1096,14 +1066,14 @@ void IceFairy::VulkanModule::RunMainLoop(void) {
 		DrawFrame();
 	}
 
-	vkDeviceWaitIdle(device);
+	device->GetDevice()->waitIdle();
 }
 
 void IceFairy::VulkanModule::DrawFrame(void) {
-	device.waitForFences({ inFlightFences[currentFrame] }, VK_TRUE, std::numeric_limits<uint64_t>::max());
+	device->GetDevice()->waitForFences({ inFlightFences[currentFrame] }, VK_TRUE, std::numeric_limits<uint64_t>::max());
 
 	uint32_t imageIndex;
-	vk::Result result = device.acquireNextImageKHR(swapChain, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphores[currentFrame], nullptr, &imageIndex);
+	vk::Result result = device->GetDevice()->acquireNextImageKHR(swapChain, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphores[currentFrame], nullptr, &imageIndex);
 
 	if (result == vk::Result::eErrorOutOfDateKHR) {
 		RecreateSwapChain();
@@ -1121,10 +1091,10 @@ void IceFairy::VulkanModule::DrawFrame(void) {
 
 	vk::SubmitInfo submitInfo(1, waitSemaphores, waitStages, 1, &commandBuffers[imageIndex], 1, signalSemaphores);
 
-	device.resetFences({ inFlightFences[currentFrame] });
+	device->GetDevice()->resetFences({ inFlightFences[currentFrame] });
 
 	try {
-		graphicsQueue.submit({ submitInfo }, inFlightFences[currentFrame]);
+		device->GetGraphicsQueue().submit({ submitInfo }, inFlightFences[currentFrame]);
 	}
 	catch (std::runtime_error err) {
 		throw VulkanException("failed to submit draw command buffer!");
@@ -1132,7 +1102,7 @@ void IceFairy::VulkanModule::DrawFrame(void) {
 
 	vk::SwapchainKHR swapChains[] = { swapChain };
 
-	result = presentQueue.presentKHR(vk::PresentInfoKHR(1, signalSemaphores, 1, swapChains, &imageIndex, nullptr));
+	result = device->GetPresentQueue().presentKHR(vk::PresentInfoKHR(1, signalSemaphores, 1, swapChains, &imageIndex, nullptr));
 
 	if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || isFrameBufferResized) {
 		isFrameBufferResized = false;
@@ -1177,7 +1147,7 @@ void IceFairy::VulkanModule::CreateDescriptorPool(void) {
 	vk::DescriptorPoolCreateInfo poolInfo({}, static_cast<uint32_t>(swapChainImages.size()),
 		static_cast<uint32_t>(poolSizes.size()), poolSizes.data());
 
-	descriptorPool = device.createDescriptorPool(poolInfo);
+	descriptorPool = device->GetDevice()->createDescriptorPool(poolInfo);
 }
 
 // TODO: Move these into something else, material construction
@@ -1187,7 +1157,7 @@ void IceFairy::VulkanModule::CreateDescriptorSets(void) {
 	vk::DescriptorSetAllocateInfo allocInfo(descriptorPool, static_cast<uint32_t>(swapChainImages.size()), layouts.data());
 
 	try {
-		descriptorSets = device.allocateDescriptorSets(allocInfo);
+		descriptorSets = device->GetDevice()->allocateDescriptorSets(allocInfo);
 	}
 	catch (std::runtime_error err) {
 		throw VulkanException("failed to allocate descriptor sets!");
@@ -1203,7 +1173,7 @@ void IceFairy::VulkanModule::CreateDescriptorSets(void) {
 			vk::WriteDescriptorSet(descriptorSets[i], 1, 0, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo, nullptr)
 		};
 
-		device.updateDescriptorSets(descriptorWrites, nullptr);
+		device->GetDevice()->updateDescriptorSets(descriptorWrites, nullptr);
 	}
 }
 
