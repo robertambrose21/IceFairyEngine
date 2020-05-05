@@ -22,6 +22,7 @@
 #include "constants/modulenames.h"
 #include "vulkanexception.h"
 #include "vulkandevice.h"
+#include "vulkaninstance.h"
 #include "shadermodule.h"
 #include "queuefamily.h"
 #include "commandpoolmanager.h"
@@ -82,7 +83,7 @@ namespace IceFairy {
 		// TODO: smart pointer?
 		GLFWwindow* window;
 		// TODO: UniqueInstance - This will hopefully help with the unique device issues
-		vk::Instance instance;
+		std::shared_ptr<VulkanInstance> instance;
 
 		// TODO: vk::UniqueSurfaceKHR
 		VkSurfaceKHR surface;
@@ -226,7 +227,6 @@ namespace IceFairy {
 		void CreateDescriptorPool(void);
 		void CreateDescriptorSets(void);
 
-		std::vector<const char*> GetRequiredExtensions(void);
 		bool CheckDeviceExtensionSupport(vk::PhysicalDevice device);
 
 		// Debugging

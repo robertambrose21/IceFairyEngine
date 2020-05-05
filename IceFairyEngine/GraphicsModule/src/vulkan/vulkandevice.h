@@ -23,8 +23,6 @@ namespace IceFairy {
 		const vk::UniqueDevice device;
 
 		QueueFamily::Indices indices;
-		/*vk::Queue graphicsQueue;
-		vk::Queue presentQueue;*/
 	};
 
 }

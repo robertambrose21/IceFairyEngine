@@ -22,9 +22,7 @@ const std::vector<const char*> deviceExtensions = {
 IceFairy::VulkanDevice::VulkanDevice(const vk::PhysicalDevice& physicalDevice, VkSurfaceKHR surface, QueueFamily::Indices indices) :
 	indices(indices),
 	device(CreateDevice(physicalDevice, surface, indices))
-{
-	std::cout << "test" << std::endl;
-}
+{ }
 
 const vk::UniqueDevice& IceFairy::VulkanDevice::GetDevice(void) {
 	return device;

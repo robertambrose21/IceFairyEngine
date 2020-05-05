@@ -45,27 +45,6 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(VkInstance instance, 
 	}
 }
 
-bool CheckValidationLayerSupport(void) {
-	std::vector<vk::LayerProperties> availableLayers = vk::enumerateInstanceLayerProperties();
-
-	for (const char* layerName : validationLayers) {
-		bool layerFound = false;
-
-		for (const auto& layerProperties : availableLayers) {
-			if (strcmp(layerName, layerProperties.layerName) == 0) {
-				layerFound = true;
-				break;
-			}
-		}
-
-		if (!layerFound) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
 IceFairy::VulkanModule::VulkanModule() : Module()
 { }
 
@@ -133,8 +112,6 @@ bool IceFairy::VulkanModule::Initialise(void) {
 	return true;
 }
 
-// TODO: Proper clean up
-// TODO: Device stuff potentially unneeded?
 void IceFairy::VulkanModule::CleanUp(void) {
 	CleanupSwapChain();
 
@@ -150,7 +127,6 @@ void IceFairy::VulkanModule::CleanUp(void) {
 	}
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		
 		device->GetDevice()->destroySemaphore(renderFinishedSemaphores[i], nullptr);
 		device->GetDevice()->destroySemaphore(imageAvailableSemaphores[i], nullptr);
 		device->GetDevice()->destroyFence(inFlightFences[i], nullptr);
@@ -160,14 +136,9 @@ void IceFairy::VulkanModule::CleanUp(void) {
 
 	vmaDestroyAllocator(allocator);
 
-	device->GetDevice()->destroy();
-
 	if (enableValidationLayers) {
-		vkDestroyDebugUtilsMessengerEXT(instance, callback, nullptr);
+		instance->GetInstance()->destroyDebugUtilsMessengerEXT(callback, nullptr);
 	}
-
-	vkDestroySurfaceKHR(instance, surface, nullptr);
-	vkDestroyInstance(instance, nullptr);
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
@@ -222,33 +193,11 @@ void IceFairy::VulkanModule::SetIsFrameBufferResized(const bool& value) {
 }
 
 void IceFairy::VulkanModule::InitialiseVulkanInstance(void) {
-	if (enableValidationLayers && !CheckValidationLayerSupport()) {
-		throw VulkanException("validation layers requested, but not available!");
-	}
-
-	// TODO: Catch globally as a VulkanException
-	try {
-		uint32_t numLayers = 0;
-		const char* const* layerNames = nullptr;
-		auto extensions = GetRequiredExtensions();
-
-		if (enableValidationLayers) {
-			numLayers = static_cast<uint32_t>(validationLayers.size());
-			layerNames = validationLayers.data();
-		}
-
-		vk::ApplicationInfo appInfo("Vulkan Demo", 0, "IceFairyEngine", 0, VK_API_VERSION_1_1);
-		vk::InstanceCreateInfo createInfo({}, &appInfo, numLayers, layerNames, static_cast<uint32_t>(extensions.size()), extensions.data());
-
-		instance = vk::createInstance(createInfo);;
-	}
-	catch (std::runtime_error& err) {
-		throw VulkanException("failed to create instance: " + std::string(err.what()));
-	}
+	instance = std::make_shared<VulkanInstance>();
 }
 
 void IceFairy::VulkanModule::CreateSurface(void) {
-	if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
+	if (glfwCreateWindowSurface(*instance->GetInstance(), window, nullptr, &surface) != VK_SUCCESS) {
 		throw VulkanException("failed to create window surface!");
 	}
 }
@@ -302,7 +251,7 @@ void IceFairy::VulkanModule::CreateSwapChain(void) {
 }
 
 void IceFairy::VulkanModule::PickPhysicalDevice(void) {
-	std::vector<vk::PhysicalDevice> devices = instance.enumeratePhysicalDevices();
+	std::vector<vk::PhysicalDevice> devices = instance->GetInstance()->enumeratePhysicalDevices();
 
 	if (devices.empty()) {
 		throw VulkanException("failed to find GPUs with Vulkan support!");
@@ -910,20 +859,6 @@ void IceFairy::VulkanModule::CreateSyncObjects(void) {
 	}
 }
 
-std::vector<const char*> IceFairy::VulkanModule::GetRequiredExtensions(void) {
-	uint32_t glfwExtensionCount = 0;
-	const char** glfwExtensions;
-	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-	std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
-	if (enableValidationLayers) {
-		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-	}
-
-	return extensions;
-}
-
 bool IceFairy::VulkanModule::CheckDeviceExtensionSupport(vk::PhysicalDevice device) {
 	std::vector<vk::ExtensionProperties> availableExtensions = device.enumerateDeviceExtensionProperties();
 
@@ -1222,7 +1157,7 @@ void IceFairy::VulkanModule::SetupDebugCallback(void) {
 		vk::DebugUtilsMessageTypeFlagsEXT messageTypeFlags(vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
 			vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation);
 
-		callback = instance.createDebugUtilsMessengerEXT(vk::DebugUtilsMessengerCreateInfoEXT({}, severityFlags, messageTypeFlags, debugCallback));
+		callback = instance->GetInstance()->createDebugUtilsMessengerEXT(vk::DebugUtilsMessengerCreateInfoEXT({}, severityFlags, messageTypeFlags, debugCallback));
 	}
 	catch (std::runtime_error& err) {
 		throw VulkanException("failed to set up debug callback: " + std::string(err.what()));

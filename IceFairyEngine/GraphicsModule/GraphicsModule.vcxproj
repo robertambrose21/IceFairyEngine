@@ -36,6 +36,7 @@
     <ClCompile Include="src\vulkan\shadermodule.cpp" />
     <ClCompile Include="src\vulkan\vertexobject.cpp" />
     <ClCompile Include="src\vulkan\vulkandevice.cpp" />
+    <ClCompile Include="src\vulkan\vulkaninstance.cpp" />
     <ClCompile Include="src\vulkan\vulkanmodule.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -62,6 +63,7 @@
     <ClInclude Include="src\vulkan\vertexobject.h" />
     <ClInclude Include="src\vulkan\vulkandevice.h" />
     <ClInclude Include="src\vulkan\vulkanexception.h" />
+    <ClInclude Include="src\vulkan\vulkaninstance.h" />
     <ClInclude Include="src\vulkan\vulkanmodule.h" />
   </ItemGroup>
   <ItemGroup>

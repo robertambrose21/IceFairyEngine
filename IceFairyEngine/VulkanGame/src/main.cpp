@@ -34,7 +34,6 @@
  * - Store submit/copy functions in a single command buffer and execute asynchronously
  * - Remove all instances of "using namespace IceFairy"
  * - Tests
- * - Device unique instance if possible
  * - Load models
  * - Attach shader modules to the vulkan module - as a submodule maybe?
  * - Convert vulkan debugging to hpp
@@ -46,6 +45,7 @@
  *	- Hold a VulkanContext object?
  * - Creation functions should return something which can be assigned
  * - Fix VS2019 related warnings
+ * - Move creation of various things like semaphores to VulkanDevice where appropriate
  */
 
 class DemoApplication :
