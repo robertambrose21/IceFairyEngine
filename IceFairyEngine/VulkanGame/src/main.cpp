@@ -37,15 +37,11 @@
  * - Load models
  * - Attach shader modules to the vulkan module - as a submodule maybe?
  * - Convert vulkan debugging to hpp
- * - Consider creating an "ApplicationContext" class which can be accessed from anywhere (singleton?). This could do the following:
- *  - Hold all modules?
- *  - Hold the ECS
- *  - Contain various always available utilities (e.g. registered module names).
- *  - Could be used to access modules (lazy initialisation maybe?) if unable to do so could then throw a helpful error message
- *	- Hold a VulkanContext object?
+ * - _Don't_ add a context object - bad pattern
  * - Creation functions should return something which can be assigned
  * - Fix VS2019 related warnings
  * - Move creation of various things like semaphores to VulkanDevice where appropriate
+ * - Redo the logger because it's awful. Wait until C++20, adds std::format: https://en.cppreference.com/w/cpp/utility/format/format
  */
 
 class DemoApplication :
@@ -67,8 +63,8 @@ public:
 		module->SetWindowWidth(800);
 		module->SetWindowHeight(600);
 
-		auto entity1 = this->GetEntityRegistry().AddEntity();
-		auto entity2 = this->GetEntityRegistry().AddEntity();
+		auto entity1 = this->GetEntityRegistry()->AddEntity();
+		auto entity2 = this->GetEntityRegistry()->AddEntity();
 
 		entity1->AddComponent<IceFairy::VertexObjectComponent>(
 			std::vector<unsigned int> {

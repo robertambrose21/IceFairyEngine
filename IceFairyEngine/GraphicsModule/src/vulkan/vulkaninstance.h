@@ -7,6 +7,7 @@
 
 #include "vulkan/vulkan.hpp"
 
+#include "validationlayers.h"
 #include "vulkanexception.h"
 
 namespace IceFairy {

@@ -59,8 +59,9 @@ void IceFairy::VulkanModule::CheckPreconditions(void) {
 	}
 }
 
+// TODO: This only exists because of logging, get rid of it?
 std::string IceFairy::VulkanModule::GetName(void) const {
-	return Constants::VulkanModuleName;
+	return "VulkanModule";
 }
 
 bool IceFairy::VulkanModule::Initialise(void) {
@@ -75,12 +76,33 @@ bool IceFairy::VulkanModule::Initialise(void) {
 	PickPhysicalDevice();
 	CreateLogicalDevice();
 	CreateMemoryAllocator();
+
+	commandPoolManager = std::make_shared<CommandPoolManager>(device, physicalDevice, surface);
+
+	/* Move the following methods to VulkanDevice:
+	 * - CreateDescriptorPool
+	 * - CreateDescriptorSets
+	 * - CreateSwapChain
+	 * - CreateImageViews
+	 * - CreateImageView
+	 * - CreateTextureSampler
+	 * - CreateImage
+	 * - CreateDescriptorSetLayout
+	 * - CreateGraphicsPipeline
+	 * - CreateRenderPass
+	 * - CreateFrameBuffers
+	 * - CreateSyncObjects
+	 * - CleanupSwapChain
+	 * - RecreateSwapChain
+	 * - DrawFrame?
+	 * - CreateDescriptorSets
+	 */
+
 	CreateSwapChain();
 	CreateImageViews();
 	CreateRenderPass();
 	CreateDescriptorSetLayout();
 	CreateGraphicsPipeline();
-	commandPoolManager = std::make_shared<CommandPoolManager>(device, physicalDevice, surface);
 	CreateColorResources();
 	CreateDepthResources();
 	CreateFrameBuffers();
@@ -118,19 +140,19 @@ void IceFairy::VulkanModule::CleanUp(void) {
 	device->GetDevice()->destroySampler(textureSampler, nullptr);
 	device->GetDevice()->destroyImageView(textureImageView, nullptr);
 
-	allocator.destroyImage(textureImage, textureImageMemory);
-
 	device->GetDevice()->destroyDescriptorSetLayout(descriptorSetLayout, nullptr);
-
-	for (auto& vertexObject : vertexObjects) {
-		vertexObject.CleanUp(allocator);
-	}
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		device->GetDevice()->destroySemaphore(renderFinishedSemaphores[i], nullptr);
 		device->GetDevice()->destroySemaphore(imageAvailableSemaphores[i], nullptr);
 		device->GetDevice()->destroyFence(inFlightFences[i], nullptr);
 	}
+
+	for (auto& vertexObject : vertexObjects) {
+		vertexObject.CleanUp(allocator);
+	}
+
+	allocator.destroyImage(textureImage, textureImageMemory);
 
 	commandPoolManager->CleanUp();
 
@@ -931,17 +953,16 @@ vk::Extent2D IceFairy::VulkanModule::ChooseSwapExtent(const vk::SurfaceCapabilit
 }
 
 void IceFairy::VulkanModule::CleanupSwapChain(void) {
-	device->GetDevice()->destroyImageView(colorImageView, nullptr);
 	allocator.destroyImage(colorImage, colorImageMemory);
-
-	device->GetDevice()->destroyImageView(depthImageView, nullptr);
 	allocator.destroyImage(depthImage, depthImageMemory);
 
+	device->GetDevice()->destroyImageView(colorImageView, nullptr);
+	device->GetDevice()->destroyImageView(depthImageView, nullptr);
+	
 	for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
 		device->GetDevice()->destroyFramebuffer(swapChainFramebuffers[i], nullptr);
 	}
 
-	commandPoolManager->FreeCommandBuffers(commandBuffers);
 
 	device->GetDevice()->destroyPipeline(graphicsPipeline, nullptr);
 	device->GetDevice()->destroyPipelineLayout(pipelineLayout, nullptr);
@@ -952,12 +973,13 @@ void IceFairy::VulkanModule::CleanupSwapChain(void) {
 	}
 
 	device->GetDevice()->destroySwapchainKHR(swapChain, nullptr);
+	device->GetDevice()->destroyDescriptorPool(descriptorPool, nullptr);
+
+	commandPoolManager->FreeCommandBuffers(commandBuffers);
 
 	for (size_t i = 0; i < swapChainImages.size(); i++) {
 		allocator.destroyBuffer(uniformBuffers[i].first, uniformBuffers[i].second);
 	}
-
-	device->GetDevice()->destroyDescriptorPool(descriptorPool, nullptr);
 }
 
 void IceFairy::VulkanModule::RecreateSwapChain(void) {

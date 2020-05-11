@@ -2,10 +2,12 @@
 
 using namespace IceFairy;
 
-Application::Application(int argc, char** argv)
-    : argc(argc),
-      argv(argv)
-{ }
+Application::Application(int argc, char** argv) :
+	argc(argc),
+    argv(argv)
+{
+	entityRegistry = std::make_shared<EntityRegistry>();
+}
 
 void Application::Initialise() {
 	const char* logo =
@@ -22,20 +24,20 @@ void Application::Initialise() {
 	Logger::Print(logo);
 
 	Logger::PrintLn(Logger::LEVEL_INFO, "Initialising entity registry...");
-	entityRegistry.Initialise();
+	entityRegistry->Initialise();
 	Logger::PrintLn(Logger::LEVEL_INFO, "Done");
 
 	Logger::PrintLn(Logger::LEVEL_INFO, "Loading Modules...");
 
 	unsigned int numModulesLoaded = 0;
-	for (auto& module : modules) {
-		Logger::PrintLn(Logger::LEVEL_INFO, "[%s] Loading...", module.first.c_str());
-		if (module.second->Initialise()) {
-			Logger::PrintLn(Logger::LEVEL_INFO, "[%s] OK.", module.first.c_str());
+	for (auto& [name, module] : modules) {
+		Logger::PrintLn(Logger::LEVEL_INFO, "[%s] Loading...", name.c_str());
+		if (module->Initialise()) {
+			Logger::PrintLn(Logger::LEVEL_INFO, "[%s] OK.", name.c_str());
 			numModulesLoaded++;
 		}
 		else {
-			Logger::PrintLn(Logger::LEVEL_ERROR, "[%s] FAILED.", module.first.c_str());
+			Logger::PrintLn(Logger::LEVEL_ERROR, "[%s] FAILED.", name.c_str());
 		}
 	}
 	Logger::PrintLn(Logger::LEVEL_INFO, "%d/%d modules loaded.", numModulesLoaded, modules.size());
@@ -55,7 +57,7 @@ bool Application::IsModuleLoaded(std::string moduleName) {
     return modules.find(moduleName) != modules.end();
 }
 
-EntityRegistry& IceFairy::Application::GetEntityRegistry(void) {
+std::shared_ptr<EntityRegistry> IceFairy::Application::GetEntityRegistry(void) {
 	return entityRegistry;
 }
 

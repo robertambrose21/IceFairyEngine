@@ -60,6 +60,7 @@
     <ClInclude Include="src\vulkan\glm_include.h" />
     <ClInclude Include="src\vulkan\queuefamily.h" />
     <ClInclude Include="src\vulkan\shadermodule.h" />
+    <ClInclude Include="src\vulkan\validationlayers.h" />
     <ClInclude Include="src\vulkan\vertexobject.h" />
     <ClInclude Include="src\vulkan\vulkandevice.h" />
     <ClInclude Include="src\vulkan\vulkanexception.h" />

@@ -1,18 +1,5 @@
 #include "vulkaninstance.h"
 
-// TODO: Context object
-#ifdef NDEBUG
-const bool enableValidationLayers = false;
-#else
-const bool enableValidationLayers = true;
-#endif
-
-const std::vector<const char*> validationLayers = {
-	"VK_LAYER_LUNARG_standard_validation"
-};
-// --
-
-
 IceFairy::VulkanInstance::VulkanInstance() :
 	instance(CreateInstance())
 { }

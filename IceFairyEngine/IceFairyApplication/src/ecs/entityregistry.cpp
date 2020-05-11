@@ -21,21 +21,19 @@ std::shared_ptr<IceFairy::Entity> IceFairy::EntityRegistry::GetEntity(int id) {
 }
 
 void IceFairy::EntityRegistry::AddRegisteredModule(std::shared_ptr<Module> module) {
-	registeredModules[module->GetName()] = module;
+	registeredModules[typeid(*module)] = module;
 }
 
 void IceFairy::EntityRegistry::Initialise(void) {
-	if (registeredModules.find(Constants::VulkanModuleName) != registeredModules.end()) {
-		auto module = std::dynamic_pointer_cast<VulkanModule>(registeredModules[Constants::VulkanModuleName]);
+	if (IsModuleRegistered<VulkanModule>()) {
+		auto module = GetRegisteredModule<VulkanModule>();
 
-		Schedule(std::make_shared<VertexObjectSystem>(module));
+		Schedule(std::make_shared<VertexObjectCreationJob>(module));
 	}
 }
 
 void IceFairy::EntityRegistry::StartEntityLoop(void) {
 	for (auto& [id, entity] : entities) {
-		if (registeredModules.find(Constants::VulkanModuleName) != registeredModules.end()) {
-
-		}
+		// currently no-op
 	}
 }

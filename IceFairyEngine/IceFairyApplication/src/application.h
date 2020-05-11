@@ -44,7 +44,7 @@ namespace IceFairy {
 		* Instantiated versions of this class member should be used for adding top level modules
 		* and preparing any additional resources/configuration needed by the application.
 		*/
-		virtual void            Initialise(void);
+		virtual void Initialise(void);
         /*! \brief Returns a module with a given name.
          *
          * \param moduleName The name of the module to return.
@@ -57,9 +57,9 @@ namespace IceFairy {
          *
          * \returns True if the module is loaded.
          */
-        bool                    IsModuleLoaded(std::string moduleName);
+        bool IsModuleLoaded(std::string moduleName);
 
-		EntityRegistry& GetEntityRegistry(void);
+        std::shared_ptr<EntityRegistry> GetEntityRegistry(void);
 
     protected:
 		// TODO: Handle this better
@@ -70,7 +70,7 @@ namespace IceFairy {
 
 			try {
 				modules[module->GetName()] = module;
-				entityRegistry.AddRegisteredModule(module);
+				entityRegistry->AddRegisteredModule(module);
 				return module;
 			}
 			catch (NoSuchModuleException& e) {
@@ -83,13 +83,13 @@ namespace IceFairy {
          *
          * \param moduleName The name of the module if it exists.
          */
-        void                    UnloadModule(std::string moduleName);
+        void UnloadModule(std::string moduleName);
 
-        int                     GetArgc(void) const;
-        char**                  GetArgv(void) const;
+        int GetArgc(void) const;
+        char** GetArgv(void) const;
 
     private:
-		EntityRegistry entityRegistry;
+		std::shared_ptr<EntityRegistry> entityRegistry;
 		std::unordered_map<std::string, std::shared_ptr<Module>> modules;
 
         int argc;

@@ -19,7 +19,6 @@
 // TODO: Offload to a resource class
 
 #include "core/module.h"
-#include "constants/modulenames.h"
 #include "vulkanexception.h"
 #include "vulkandevice.h"
 #include "vulkaninstance.h"
@@ -82,7 +81,6 @@ namespace IceFairy {
 
 		// TODO: smart pointer?
 		GLFWwindow* window;
-		// TODO: UniqueInstance - This will hopefully help with the unique device issues
 		std::shared_ptr<VulkanInstance> instance;
 
 		// TODO: vk::UniqueSurfaceKHR
@@ -91,11 +89,6 @@ namespace IceFairy {
 		vk::PhysicalDevice physicalDevice;
 
 		std::shared_ptr<VulkanDevice> device;
-
-		//vk::Device device;
-
-		/*vk::Queue graphicsQueue;
-		vk::Queue presentQueue;*/
 
 		vk::SwapchainKHR swapChain;
 		std::vector<vk::Image> swapChainImages;

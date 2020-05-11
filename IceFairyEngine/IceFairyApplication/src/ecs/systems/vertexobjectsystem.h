@@ -13,6 +13,7 @@ namespace IceFairy {
 			vulkanModule(vulkanModule) { }
 
 		void Execute(std::shared_ptr<VertexObjectComponent> voc) {
+			// TODO: Logging
 			vulkanModule->AddVertexObject(VertexObject(voc->GetIndicies(), voc->GetVertices()));
 		}
 
@@ -20,7 +21,6 @@ namespace IceFairy {
 		std::shared_ptr<VulkanModule> vulkanModule;
 	};
 
-	// TODO: Consider rename, maybe VertexObjectCreationJob?
-	typedef JobSystem<VertexObjectComponent> VertexObjectSystem;
+	typedef JobSystem<VertexObjectComponent> VertexObjectCreationJob;
 
 }

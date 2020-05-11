@@ -2,10 +2,10 @@
 
 #include <string>
 #include <unordered_map>
+#include <typeindex>
 #include <memory>
 
 #include "core/utilities/icexception.h"
-#include "constants/modulenames.h"
 #include "entity.h"
 #include "core/module.h"
 #include "vulkan/vulkanmodule.h"
@@ -46,7 +46,17 @@ namespace IceFairy {
 		}
 
 	private:
-		std::unordered_map<std::string, std::shared_ptr<Module>> registeredModules;
+		template<typename T>
+		bool IsModuleRegistered(void) {
+			return registeredModules.find(typeid(T)) != registeredModules.end();
+		}
+
+		template<typename T>
+		std::shared_ptr<T> GetRegisteredModule(void) {
+			return std::dynamic_pointer_cast<T>(registeredModules[typeid(T)]);
+		}
+
+		std::unordered_map<std::type_index, std::shared_ptr<Module>> registeredModules;
 		std::unordered_map<int, std::shared_ptr<Entity>> entities;
 	};
 
