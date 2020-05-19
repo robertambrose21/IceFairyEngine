@@ -227,13 +227,14 @@ void IceFairy::VulkanModule::CreateSurface(void) {
 void IceFairy::VulkanModule::CreateSwapChain(void) {
 	SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(physicalDevice);
 
-	vk::SurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
-	vk::PresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
-	vk::Extent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
+	vk::SurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.GetFormats());
+	vk::PresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.GetPresentModes());
+	vk::Extent2D extent = ChooseSwapExtent(swapChainSupport.GetCapabilities());
 
-	uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
-	if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
-		imageCount = swapChainSupport.capabilities.maxImageCount;
+	// TODO: GetImageCount method
+	uint32_t imageCount = swapChainSupport.GetCapabilities().minImageCount + 1;
+	if (swapChainSupport.GetCapabilities().maxImageCount > 0 && imageCount > swapChainSupport.GetCapabilities().maxImageCount) {
+		imageCount = swapChainSupport.GetCapabilities().maxImageCount;
 	}
 
 	vk::SwapchainCreateInfoKHR createInfo({}, surface, imageCount, surfaceFormat.format, surfaceFormat.colorSpace,
@@ -253,7 +254,7 @@ void IceFairy::VulkanModule::CreateSwapChain(void) {
 		createInfo.pQueueFamilyIndices = nullptr; // Optional
 	}
 
-	createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+	createInfo.preTransform = swapChainSupport.GetCapabilities().currentTransform;
 	createInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
 	createInfo.presentMode = presentMode;
 	createInfo.clipped = VK_TRUE;
@@ -298,7 +299,7 @@ bool IceFairy::VulkanModule::IsDeviceSuitable(vk::PhysicalDevice device) {
 	bool swapChainAdequate = false;
 	if (extensionsSupported) {
 		SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(device);
-		swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+		swapChainAdequate = !swapChainSupport.GetFormats().empty() && !swapChainSupport.GetPresentModes().empty();
 	}
 
 	vk::PhysicalDeviceFeatures supportedFeatures = device.getFeatures();
@@ -893,15 +894,9 @@ bool IceFairy::VulkanModule::CheckDeviceExtensionSupport(vk::PhysicalDevice devi
 	return requiredExtensions.empty();
 }
 
-IceFairy::VulkanModule::SwapChainSupportDetails IceFairy::VulkanModule::QuerySwapChainSupport(vk::PhysicalDevice device) {
-	// TODO: Constructor for this
-	SwapChainSupportDetails details;
-
-	details.capabilities = device.getSurfaceCapabilitiesKHR(surface);
-	details.formats = device.getSurfaceFormatsKHR(surface);
-	details.presentModes = device.getSurfacePresentModesKHR(surface);
-
-	return details;
+// TODO: This doesn't need to be a method
+IceFairy::SwapChainSupportDetails IceFairy::VulkanModule::QuerySwapChainSupport(vk::PhysicalDevice device) {
+	return SwapChainSupportDetails(device.getSurfaceCapabilitiesKHR(surface), device.getSurfaceFormatsKHR(surface), device.getSurfacePresentModesKHR(surface));
 }
 
 vk::SurfaceFormatKHR IceFairy::VulkanModule::ChooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats) {

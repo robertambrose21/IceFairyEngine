@@ -34,6 +34,7 @@
     <ClCompile Include="src\vulkan\commandpoolmanager.cpp" />
     <ClCompile Include="src\vulkan\queuefamily.cpp" />
     <ClCompile Include="src\vulkan\shadermodule.cpp" />
+    <ClCompile Include="src\vulkan\swapchainsupportdetails.cpp" />
     <ClCompile Include="src\vulkan\vertexobject.cpp" />
     <ClCompile Include="src\vulkan\vulkandevice.cpp" />
     <ClCompile Include="src\vulkan\vulkaninstance.cpp" />
@@ -60,6 +61,7 @@
     <ClInclude Include="src\vulkan\glm_include.h" />
     <ClInclude Include="src\vulkan\queuefamily.h" />
     <ClInclude Include="src\vulkan\shadermodule.h" />
+    <ClInclude Include="src\vulkan\swapchainsupportdetails.h" />
     <ClInclude Include="src\vulkan\validationlayers.h" />
     <ClInclude Include="src\vulkan\vertexobject.h" />
     <ClInclude Include="src\vulkan\vulkandevice.h" />

@@ -20,6 +20,7 @@
 
 #include "core/module.h"
 #include "vulkanexception.h"
+#include "swapchainsupportdetails.h"
 #include "vulkandevice.h"
 #include "vulkaninstance.h"
 #include "shadermodule.h"
@@ -64,11 +65,11 @@ namespace IceFairy {
 		// TODO: config?
 		const int MAX_FRAMES_IN_FLIGHT = 2;
 
-		typedef struct {
+		/*typedef struct {
 			vk::SurfaceCapabilitiesKHR capabilities;
 			std::vector<vk::SurfaceFormatKHR> formats;
 			std::vector<vk::PresentModeKHR> presentModes;
-		} SwapChainSupportDetails;
+		} SwapChainSupportDetails;*/
 
 		// Take note:
 		// https://www.khronos.org/registry/vulkan/specs/1.1-extensions/html/chap14.html#interfaces-resources-layout
