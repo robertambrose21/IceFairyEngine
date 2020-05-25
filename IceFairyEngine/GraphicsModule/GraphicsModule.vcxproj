@@ -58,6 +58,7 @@
     <ClInclude Include="src\shapes\cubeobject.h" />
     <ClInclude Include="src\stbi\stb_image.h" />
     <ClInclude Include="src\vulkan\commandpoolmanager.h" />
+    <ClInclude Include="src\vulkan\glfw3_include.h" />
     <ClInclude Include="src\vulkan\glm_include.h" />
     <ClInclude Include="src\vulkan\queuefamily.h" />
     <ClInclude Include="src\vulkan\shadermodule.h" />
