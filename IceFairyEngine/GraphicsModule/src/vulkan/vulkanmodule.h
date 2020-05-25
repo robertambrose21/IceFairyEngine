@@ -1,8 +1,6 @@
 #pragma once
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
+#include "glfw3_include.h"
 #include "glm_include.h"
 
 #include "memory-allocator/vk_mem_alloc.hpp"
@@ -162,10 +160,6 @@ namespace IceFairy {
 		void CreateMemoryAllocator(void);
 
 		// Swap chain
-		SwapChainSupportDetails QuerySwapChainSupport(vk::PhysicalDevice device);
-		vk::SurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats);
-		vk::PresentModeKHR ChooseSwapPresentMode(const std::vector<vk::PresentModeKHR> availablePresentModes);
-		vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities);
 		void RecreateSwapChain(void);
 		void CleanupSwapChain(void);
 

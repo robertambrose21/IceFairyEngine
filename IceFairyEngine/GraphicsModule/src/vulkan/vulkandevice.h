@@ -13,20 +13,22 @@ namespace IceFairy {
 
 	class VulkanDevice {
 	public:
-		VulkanDevice(const vk::PhysicalDevice& physicalDevice, VkSurfaceKHR surface, QueueFamily::Indices indices);
+		VulkanDevice(const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface, QueueFamily::Indices indices);
 
 		const vk::UniqueDevice& GetDevice(void);
 		vk::Queue GetGraphicsQueue(void);
 		vk::Queue GetPresentQueue(void);
 
-		// TODO: Fix!
-		vk::SwapchainKHR CreateSwapChain(SwapChainSupportDetails swapChainSupport);
+		SwapChainSupportDetails::Data CreateSwapChain(GLFWwindow* window);
 
 	private:
 
-		vk::UniqueDevice CreateDevice(const vk::PhysicalDevice& physicalDevice, VkSurfaceKHR surface, QueueFamily::Indices indices);
+		vk::UniqueDevice CreateDevice(const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface, QueueFamily::Indices indices);
 
 		const vk::UniqueDevice device;
+
+		vk::PhysicalDevice physicalDevice;
+		vk::SurfaceKHR surface;
 
 		QueueFamily::Indices indices;
 	};

@@ -225,52 +225,7 @@ void IceFairy::VulkanModule::CreateSurface(void) {
 }
 
 void IceFairy::VulkanModule::CreateSwapChain(void) {
-	SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(physicalDevice);
-
-	vk::SurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.GetFormats());
-	vk::PresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.GetPresentModes());
-	vk::Extent2D extent = ChooseSwapExtent(swapChainSupport.GetCapabilities());
-
-	// TODO: GetImageCount method
-	uint32_t imageCount = swapChainSupport.GetCapabilities().minImageCount + 1;
-	if (swapChainSupport.GetCapabilities().maxImageCount > 0 && imageCount > swapChainSupport.GetCapabilities().maxImageCount) {
-		imageCount = swapChainSupport.GetCapabilities().maxImageCount;
-	}
-
-	vk::SwapchainCreateInfoKHR createInfo({}, surface, imageCount, surfaceFormat.format, surfaceFormat.colorSpace,
-		extent, 1, vk::ImageUsageFlagBits::eColorAttachment);
-
-	QueueFamily::Indices indices = QueueFamily(physicalDevice, surface).FindQueueFamilies();
-	uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
-
-	if (indices.graphicsFamily != indices.presentFamily) {
-		createInfo.imageSharingMode = vk::SharingMode::eConcurrent;
-		createInfo.queueFamilyIndexCount = 2;
-		createInfo.pQueueFamilyIndices = queueFamilyIndices;
-	}
-	else {
-		createInfo.imageSharingMode = vk::SharingMode::eExclusive;
-		createInfo.queueFamilyIndexCount = 0; // Optional
-		createInfo.pQueueFamilyIndices = nullptr; // Optional
-	}
-
-	createInfo.preTransform = swapChainSupport.GetCapabilities().currentTransform;
-	createInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
-	createInfo.presentMode = presentMode;
-	createInfo.clipped = VK_TRUE;
-	createInfo.oldSwapchain = nullptr;
-
-	try {
-		swapChain = device->GetDevice()->createSwapchainKHR(createInfo);
-	}
-	catch (std::runtime_error err) {
-		throw VulkanException(std::string("Failed to create swap chain: ") + err.what());
-	}
-
-	swapChainImages = device->GetDevice()->getSwapchainImagesKHR(swapChain);
-
-	swapChainImageFormat = surfaceFormat.format;
-	swapChainExtent = extent;
+	std::tie(swapChain, swapChainImages, swapChainImageFormat, swapChainExtent) = device->CreateSwapChain(window);
 }
 
 void IceFairy::VulkanModule::PickPhysicalDevice(void) {
@@ -892,59 +847,6 @@ bool IceFairy::VulkanModule::CheckDeviceExtensionSupport(vk::PhysicalDevice devi
 	}
 
 	return requiredExtensions.empty();
-}
-
-// TODO: This doesn't need to be a method
-IceFairy::SwapChainSupportDetails IceFairy::VulkanModule::QuerySwapChainSupport(vk::PhysicalDevice device) {
-	return SwapChainSupportDetails(device.getSurfaceCapabilitiesKHR(surface), device.getSurfaceFormatsKHR(surface), device.getSurfacePresentModesKHR(surface));
-}
-
-vk::SurfaceFormatKHR IceFairy::VulkanModule::ChooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats) {
-	if (availableFormats.size() == 1 && availableFormats[0].format == vk::Format::eUndefined) {
-		return { vk::Format::eB8G8R8A8Unorm, vk::ColorSpaceKHR::eSrgbNonlinear };
-	}
-
-	for (const auto& availableFormat : availableFormats) {
-		if (availableFormat.format == vk::Format::eB8G8R8A8Unorm && availableFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
-			return availableFormat;
-		}
-	}
-
-	return availableFormats[0];
-}
-
-vk::PresentModeKHR IceFairy::VulkanModule::ChooseSwapPresentMode(const std::vector<vk::PresentModeKHR> availablePresentModes) {
-	vk::PresentModeKHR bestMode = vk::PresentModeKHR::eFifo;
-
-	for (const auto& availablePresentMode : availablePresentModes) {
-		if (availablePresentMode == vk::PresentModeKHR::eMailbox) {
-			return availablePresentMode;
-		}
-		else if (availablePresentMode == vk::PresentModeKHR::eImmediate) {
-			bestMode = availablePresentMode;
-		}
-	}
-
-	return bestMode;
-}
-
-vk::Extent2D IceFairy::VulkanModule::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR & capabilities) {
-	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
-		return capabilities.currentExtent;
-	}
-
-	int width, height;
-	glfwGetFramebufferSize(window, &width, &height);
-
-	vk::Extent2D actualExtent = {
-		static_cast<uint32_t>(width),
-		static_cast<uint32_t>(height)
-	};
-
-	actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
-	actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
-
-	return actualExtent;
 }
 
 void IceFairy::VulkanModule::CleanupSwapChain(void) {
