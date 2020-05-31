@@ -63,12 +63,6 @@ namespace IceFairy {
 		// TODO: config?
 		const int MAX_FRAMES_IN_FLIGHT = 2;
 
-		/*typedef struct {
-			vk::SurfaceCapabilitiesKHR capabilities;
-			std::vector<vk::SurfaceFormatKHR> formats;
-			std::vector<vk::PresentModeKHR> presentModes;
-		} SwapChainSupportDetails;*/
-
 		// Take note:
 		// https://www.khronos.org/registry/vulkan/specs/1.1-extensions/html/chap14.html#interfaces-resources-layout
 		// Explanation bottom of this tutorial https://vulkan-tutorial.com/en/Uniform_buffers/Descriptor_pool_and_sets

@@ -8,7 +8,7 @@ namespace IceFairy {
 
 	class QueueFamily {
 	public:
-		typedef struct {
+		typedef struct _indices {
 			std::optional<uint32_t> graphicsFamily;
 			std::optional<uint32_t> presentFamily;
 

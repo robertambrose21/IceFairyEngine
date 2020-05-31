@@ -253,7 +253,7 @@ bool IceFairy::VulkanModule::IsDeviceSuitable(vk::PhysicalDevice device) {
 
 	bool swapChainAdequate = false;
 	if (extensionsSupported) {
-		SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(device);
+		SwapChainSupportDetails swapChainSupport = SwapChainSupportDetails::QuerySwapChainSupport(device, surface);
 		swapChainAdequate = !swapChainSupport.GetFormats().empty() && !swapChainSupport.GetPresentModes().empty();
 	}
 
