@@ -4,8 +4,8 @@ IceFairy::SwapChainSupportDetails::SwapChainSupportDetails(const vk::SurfaceCapa
 	std::vector<vk::SurfaceFormatKHR> formats, std::vector<vk::PresentModeKHR> presentModes) :
 	capabilities(capabilities),
 	formats(std::move(formats)),
-	presentModes(std::move(presentModes))
-{ }
+	presentModes(std::move(presentModes)) {
+}
 
 vk::SurfaceFormatKHR IceFairy::SwapChainSupportDetails::ChooseSwapSurfaceFormat(void) {
 	if (formats.size() == 1 && formats[0].format == vk::Format::eUndefined) {
@@ -27,8 +27,7 @@ vk::PresentModeKHR IceFairy::SwapChainSupportDetails::ChooseSwapPresentMode(void
 	for (const auto& availablePresentMode : presentModes) {
 		if (availablePresentMode == vk::PresentModeKHR::eMailbox) {
 			return availablePresentMode;
-		}
-		else if (availablePresentMode == vk::PresentModeKHR::eImmediate) {
+		} else if (availablePresentMode == vk::PresentModeKHR::eImmediate) {
 			bestMode = availablePresentMode;
 		}
 	}

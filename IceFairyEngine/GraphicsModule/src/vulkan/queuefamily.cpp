@@ -2,8 +2,8 @@
 
 IceFairy::QueueFamily::QueueFamily(vk::PhysicalDevice physicalDevice, VkSurfaceKHR surface) :
 	physicalDevice(physicalDevice),
-	surface(surface)
-{ }
+	surface(surface) {
+}
 
 IceFairy::QueueFamily::Indices IceFairy::QueueFamily::FindQueueFamilies(void) {
 	Indices indices;

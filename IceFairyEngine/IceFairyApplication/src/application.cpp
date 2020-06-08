@@ -4,8 +4,7 @@ using namespace IceFairy;
 
 Application::Application(int argc, char** argv) :
 	argc(argc),
-    argv(argv)
-{
+	argv(argv) {
 	entityRegistry = std::make_shared<EntityRegistry>();
 }
 
@@ -35,8 +34,7 @@ void Application::Initialise() {
 		if (module->Initialise()) {
 			Logger::PrintLn(Logger::LEVEL_INFO, "[%s] OK.", name.c_str());
 			numModulesLoaded++;
-		}
-		else {
+		} else {
 			Logger::PrintLn(Logger::LEVEL_ERROR, "[%s] FAILED.", name.c_str());
 		}
 	}
@@ -46,15 +44,15 @@ void Application::Initialise() {
 }
 
 std::shared_ptr<Module> Application::GetModule(std::string moduleName) {
-    if (IsModuleLoaded(moduleName)) {
-        return modules[moduleName];
-    }
+	if (IsModuleLoaded(moduleName)) {
+		return modules[moduleName];
+	}
 
-    throw NoSuchModuleException();
+	throw NoSuchModuleException();
 }
 
 bool Application::IsModuleLoaded(std::string moduleName) {
-    return modules.find(moduleName) != modules.end();
+	return modules.find(moduleName) != modules.end();
 }
 
 std::shared_ptr<EntityRegistry> IceFairy::Application::GetEntityRegistry(void) {
@@ -62,16 +60,16 @@ std::shared_ptr<EntityRegistry> IceFairy::Application::GetEntityRegistry(void) {
 }
 
 void Application::UnloadModule(std::string moduleName) {
-    if (IsModuleLoaded(moduleName)) {
-        modules.erase(moduleName);
-        Logger::PrintLn(Logger::LEVEL_INFO, "[%s] module unloaded.", moduleName.c_str());
-    }
+	if (IsModuleLoaded(moduleName)) {
+		modules.erase(moduleName);
+		Logger::PrintLn(Logger::LEVEL_INFO, "[%s] module unloaded.", moduleName.c_str());
+	}
 }
 
 int Application::GetArgc(void) const {
-    return argc;
+	return argc;
 }
 
 char** Application::GetArgv(void) const {
-    return argv;
+	return argv;
 }

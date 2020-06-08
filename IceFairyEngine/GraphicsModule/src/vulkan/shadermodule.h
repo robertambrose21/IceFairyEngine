@@ -22,7 +22,7 @@ namespace IceFairy {
 		void CleanUp(void);
 		vk::PipelineShaderStageCreateInfo GetVertexShaderStageInfo(void) const;
 		vk::PipelineShaderStageCreateInfo GetFragmentShaderStageInfo(void) const;
-		
+
 	private:
 		vk::Device device;
 		vk::PipelineShaderStageCreateInfo vertexShaderStageInfo;

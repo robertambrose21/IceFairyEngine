@@ -21,7 +21,7 @@ namespace IceFairy {
 	class CommandPoolManager {
 	public:
 		CommandPoolManager(std::shared_ptr<VulkanDevice> deviceHandle, vk::PhysicalDevice physicalDeviceHandle, VkSurfaceKHR surfaceHandle);
-		
+
 		void CleanUp(void);
 
 		// TODO: Reconsider passing through command buffer vector, maybe create a handle which contains a reference to the command buffer vector?

@@ -51,8 +51,8 @@ class DemoApplication :
 	public std::enable_shared_from_this<DemoApplication> {
 public:
 	DemoApplication(int argc, char** argv)
-		: IceFairy::Application(argc, argv)
-	{ }
+		: IceFairy::Application(argc, argv) {
+	}
 
 	~DemoApplication() {
 		module->CleanUp();
@@ -69,27 +69,27 @@ public:
 
 		entity1->AddComponent<IceFairy::VertexObjectComponent>(
 			std::vector<unsigned int> {
-				0, 1, 2, 2, 3, 0,
+			0, 1, 2, 2, 3, 0,
 				4, 5, 6, 6, 7, 4
-			},
+		},
 			std::vector<IceFairy::Vertex> {
-				{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-				{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-				{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-				{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+				{ {-0.5f, -0.5f, 0.0f}, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f }},
+				{ {0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f} },
+				{ {0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f} },
+				{ {-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f} },
 
-				{{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-				{{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-				{{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-				{{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
+				{ {-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f} },
+				{ {0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f} },
+				{ {0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f} },
+				{ {-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f} }
 			}
-		);
+			);
 
 		entity2->AddComponent<IceFairy::VertexObjectComponent>(
 			std::vector<unsigned int> {
-				0, 1, 2, 2, 3, 0,
+			0, 1, 2, 2, 3, 0,
 				4, 5, 6, 6, 7, 4
-			},
+		},
 			std::vector<IceFairy::Vertex> {
 				{ {-0.5f, -0.5f, 0.5f}, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f }},
 				{ {0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f} },
@@ -101,7 +101,7 @@ public:
 				{ {0.5f, 0.5f, -1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f} },
 				{ {-0.5f, 0.5f, -1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f} }
 			}
-		);
+			);
 
 		Application::Initialise();
 
@@ -130,11 +130,11 @@ private:
 };
 
 int main(int argc, char** argv) {
- #ifdef NDEBUG
- 	IceFairy::Logger::SetLogLevel(IceFairy::Logger::LEVEL_INFO);
- #else
- 	IceFairy::Logger::SetLogLevel(IceFairy::Logger::LEVEL_TRACE);
- #endif
+#ifdef NDEBUG
+	IceFairy::Logger::SetLogLevel(IceFairy::Logger::LEVEL_INFO);
+#else
+	IceFairy::Logger::SetLogLevel(IceFairy::Logger::LEVEL_TRACE);
+#endif
 
 	try {
 		auto app = std::make_shared<DemoApplication>(argc, argv);

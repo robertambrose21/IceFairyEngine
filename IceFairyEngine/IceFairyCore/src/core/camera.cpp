@@ -3,15 +3,14 @@
 using namespace IceFairy;
 
 Camera::Camera(const Vector3f& eye, const Vector3f& lookAt, const Vector3f& up)
-    : eye(eye),
-      lookAt(lookAt),
-      up(up)
-{
-    Update(0L);
+	: eye(eye),
+	lookAt(lookAt),
+	up(up) {
+	Update(0L);
 }
 
 void Camera::SetEye(const Vector3f& value) {
-    this->eye = value;
+	this->eye = value;
 }
 
 Vector3f Camera::GetEye(void) const {
@@ -19,7 +18,7 @@ Vector3f Camera::GetEye(void) const {
 }
 
 void Camera::SetLookAt(const Vector3f& value) {
-    this->lookAt = value;
+	this->lookAt = value;
 }
 
 Vector3f Camera::GetLookAt(void) const {
@@ -27,7 +26,7 @@ Vector3f Camera::GetLookAt(void) const {
 }
 
 void Camera::SetUp(const Vector3f& value) {
-    this->up = value;
+	this->up = value;
 }
 
 Vector3f Camera::GetUp(void) const {
@@ -35,9 +34,9 @@ Vector3f Camera::GetUp(void) const {
 }
 
 Matrix4f Camera::GetViewMatrix(void) const {
-    return this->viewMatrix;
+	return this->viewMatrix;
 }
 
 void Camera::Update(long timeSinceLastFrame) {
-    this->viewMatrix = IceFairy::Matrix4f::LookAt(eye, lookAt, up);
+	this->viewMatrix = IceFairy::Matrix4f::LookAt(eye, lookAt, up);
 }

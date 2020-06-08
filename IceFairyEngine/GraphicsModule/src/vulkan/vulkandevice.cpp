@@ -6,8 +6,8 @@ IceFairy::VulkanDevice::VulkanDevice(const vk::PhysicalDevice& physicalDevice, c
 	indices(indices),
 	physicalDevice(physicalDevice),
 	surface(surface),
-	device(CreateDevice(physicalDevice, surface, indices))
-{ }
+	device(CreateDevice(physicalDevice, surface, indices)) {
+}
 
 const vk::UniqueDevice& IceFairy::VulkanDevice::GetDevice(void) {
 	return device;
@@ -75,8 +75,7 @@ IceFairy::SwapChainSupportDetails::Data IceFairy::VulkanDevice::CreateSwapChain(
 		createInfo.imageSharingMode = vk::SharingMode::eConcurrent;
 		createInfo.queueFamilyIndexCount = 2;
 		createInfo.pQueueFamilyIndices = queueFamilyIndices;
-	}
-	else {
+	} else {
 		createInfo.imageSharingMode = vk::SharingMode::eExclusive;
 		createInfo.queueFamilyIndexCount = 0; // Optional
 		createInfo.pQueueFamilyIndices = nullptr; // Optional
@@ -136,8 +135,8 @@ vk::DescriptorSetLayout IceFairy::VulkanDevice::CreateDescriptorSetLayout(void) 
 }
 
 std::vector<vk::DescriptorSet> IceFairy::VulkanDevice::CreateDescriptorSets(const uint32_t& numSwapChainImages,
-		std::vector<std::pair<vk::Buffer, vma::Allocation>> uniformBuffers, vk::Sampler textureSampler,
-		vk::ImageView textureImageView, vk::DeviceSize range) {
+	std::vector<std::pair<vk::Buffer, vma::Allocation>> uniformBuffers, vk::Sampler textureSampler,
+	vk::ImageView textureImageView, vk::DeviceSize range) {
 	std::vector<vk::DescriptorSetLayout> layouts(numSwapChainImages, descriptorSetLayout);
 
 	vk::DescriptorSetAllocateInfo allocInfo(descriptorPool, numSwapChainImages, layouts.data());

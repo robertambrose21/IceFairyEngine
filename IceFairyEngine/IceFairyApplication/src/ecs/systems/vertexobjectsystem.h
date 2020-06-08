@@ -10,7 +10,8 @@ namespace IceFairy {
 	class JobSystem<VertexObjectComponent> {
 	public:
 		JobSystem(std::shared_ptr<VulkanModule> vulkanModule) :
-			vulkanModule(vulkanModule) { }
+			vulkanModule(vulkanModule) {
+		}
 
 		void Execute(std::shared_ptr<VertexObjectComponent> voc) {
 			// TODO: Logging

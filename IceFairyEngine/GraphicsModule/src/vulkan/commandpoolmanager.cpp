@@ -3,8 +3,7 @@
 IceFairy::CommandPoolManager::CommandPoolManager(std::shared_ptr<VulkanDevice> deviceHandle, vk::PhysicalDevice physicalDeviceHandle, VkSurfaceKHR surfaceHandle) :
 	deviceHandle(deviceHandle),
 	physicalDeviceHandle(physicalDeviceHandle),
-	surfaceHandle(surfaceHandle)
-{
+	surfaceHandle(surfaceHandle) {
 	CreateCommandPool();
 }
 
@@ -15,17 +14,17 @@ void IceFairy::CommandPoolManager::CleanUp(void) {
 }
 
 void IceFairy::CommandPoolManager::CreateCommandBuffers(
-		std::vector<vk::CommandBuffer>& commandBuffers,
-		std::vector<VertexObject>& vertexObjects,
-		std::vector<vk::Framebuffer>& swapChainFramebuffers,
-		vk::RenderPass renderPass,
-		vk::Extent2D swapChainExtent,
-		vk::Pipeline graphicsPipeline,
-		vk::PipelineLayout pipelineLayout,
-		std::vector<vk::DescriptorSet>& descriptorSets) {
+	std::vector<vk::CommandBuffer>& commandBuffers,
+	std::vector<VertexObject>& vertexObjects,
+	std::vector<vk::Framebuffer>& swapChainFramebuffers,
+	vk::RenderPass renderPass,
+	vk::Extent2D swapChainExtent,
+	vk::Pipeline graphicsPipeline,
+	vk::PipelineLayout pipelineLayout,
+	std::vector<vk::DescriptorSet>& descriptorSets) {
 	commandBuffers.resize(swapChainFramebuffers.size());
 
-	vk::CommandBufferAllocateInfo allocInfo(commandPool, vk::CommandBufferLevel::ePrimary, (uint32_t)commandBuffers.size());
+	vk::CommandBufferAllocateInfo allocInfo(commandPool, vk::CommandBufferLevel::ePrimary, (uint32_t) commandBuffers.size());
 
 	commandBuffers = deviceHandle->GetDevice()->allocateCommandBuffers(allocInfo);
 
@@ -99,7 +98,7 @@ void IceFairy::CommandPoolManager::EndSingleTimeCommands(vk::CommandBuffer comma
 
 void IceFairy::CommandPoolManager::CreateCommandPool(void) {
 	QueueFamily::Indices queueFamilyIndices = QueueFamily(physicalDeviceHandle, surfaceHandle).FindQueueFamilies();
-	
+
 	try {
 		commandPool = deviceHandle->GetDevice()->createCommandPool(vk::CommandPoolCreateInfo({}, queueFamilyIndices.graphicsFamily.value()));
 	}

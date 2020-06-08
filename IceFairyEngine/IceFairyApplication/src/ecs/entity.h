@@ -16,8 +16,8 @@ namespace IceFairy {
 	class EntityException : public ICException {
 	public:
 		EntityException(const int& entityId, const std::string& message)
-			: ICException("Entity[" + std::to_string(entityId) + "] encountered an error: " + message)
-		{ }
+			: ICException("Entity[" + std::to_string(entityId) + "] encountered an error: " + message) {
+		}
 	};
 
 

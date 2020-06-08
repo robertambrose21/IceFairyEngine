@@ -1,8 +1,8 @@
 #include "vulkaninstance.h"
 
 IceFairy::VulkanInstance::VulkanInstance() :
-	instance(CreateInstance())
-{ }
+	instance(CreateInstance()) {
+}
 
 const vk::UniqueInstance& IceFairy::VulkanInstance::GetInstance(void) {
 	return instance;

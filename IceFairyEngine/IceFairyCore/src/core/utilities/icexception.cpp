@@ -3,16 +3,16 @@
 using namespace IceFairy;
 
 ICException::ICException()
-    : message(ICE_FAIRY_UNDEFINED_EXCEPTION)
-{ }
+	: message(ICE_FAIRY_UNDEFINED_EXCEPTION) {
+}
 
 ICException::ICException(std::string message)
-    : message(message)
-{ }
+	: message(message) {
+}
 
-ICException::~ICException()
-{ }
+ICException::~ICException() {
+}
 
 const char* ICException::what() const throw() {
-    return message.c_str();
+	return message.c_str();
 }

@@ -1,32 +1,30 @@
 #pragma once
 
-#include "glfw3_include.h"
-#include "glm_include.h"
-
-#include "memory-allocator/vk_mem_alloc.hpp"
-#include "vulkan/vulkan.hpp"
-
-#include <string>
-#include <vector>
-#include <optional> // TODO: Remove
-#include <set>
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <optional>  // TODO: Remove
+#include <set>
+#include <string>
 #include <unordered_map>
+#include <vector>
+
+#include "glfw3_include.h"
+#include "glm_include.h"
+#include "memory-allocator/vk_mem_alloc.hpp"
+#include "vulkan/vulkan.hpp"
 // TODO: Offload to a resource class
 
+#include "commandpoolmanager.h"
 #include "core/module.h"
-#include "vulkanexception.h"
+#include "queuefamily.h"
+#include "shadermodule.h"
 #include "swapchainsupportdetails.h"
 #include "vulkandevice.h"
+#include "vulkanexception.h"
 #include "vulkaninstance.h"
-#include "shadermodule.h"
-#include "queuefamily.h"
-#include "commandpoolmanager.h"
 // Consider moving to cpp file too
 #include "../stbi/stb_image.h"
-
 #include "vertexobject.h"
 
 namespace IceFairy {
@@ -65,7 +63,8 @@ namespace IceFairy {
 
 		// Take note:
 		// https://www.khronos.org/registry/vulkan/specs/1.1-extensions/html/chap14.html#interfaces-resources-layout
-		// Explanation bottom of this tutorial https://vulkan-tutorial.com/en/Uniform_buffers/Descriptor_pool_and_sets
+		// Explanation bottom of this tutorial
+		// https://vulkan-tutorial.com/en/Uniform_buffers/Descriptor_pool_and_sets
 		typedef struct {
 			alignas(16) glm::mat4 model;
 			alignas(16) glm::mat4 view;
@@ -159,14 +158,23 @@ namespace IceFairy {
 
 		// Image views
 		void CreateImageViews(void);
-		vk::ImageView CreateImageView(vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags, uint32_t mipLevels);
+		vk::ImageView CreateImageView(vk::Image image, vk::Format format,
+			vk::ImageAspectFlags aspectFlags,
+			uint32_t mipLevels);
 		void CreateTextureImage(void);
 		void CreateTextureImageView(void);
-		void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling,
-			vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::Image& image, vma::Allocation& imageMemory);
-		void TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32_t mipLevels);
-		void CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height);
-		void GenerateMipmaps(vk::Image image, vk::Format imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
+		void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels,
+			vk::SampleCountFlagBits numSamples, vk::Format format,
+			vk::ImageTiling tiling, vk::ImageUsageFlags usage,
+			vk::MemoryPropertyFlags properties, vk::Image& image,
+			vma::Allocation& imageMemory);
+		void TransitionImageLayout(vk::Image image, vk::Format format,
+			vk::ImageLayout oldLayout,
+			vk::ImageLayout newLayout, uint32_t mipLevels);
+		void CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32_t width,
+			uint32_t height);
+		void GenerateMipmaps(vk::Image image, vk::Format imageFormat,
+			int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 		vk::SampleCountFlagBits GetMaxUsableSampleCount(void);
 		void CreateColorResources(void);
 
@@ -187,19 +195,25 @@ namespace IceFairy {
 		void CreateSyncObjects(void);
 
 		// Buffers
-		std::pair<vk::Buffer, vma::Allocation> CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties);
-		void CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
+		std::pair<vk::Buffer, vma::Allocation> CreateBuffer(
+			vk::DeviceSize size, vk::BufferUsageFlags usage,
+			vk::MemoryPropertyFlags properties);
+		void CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer,
+			vk::DeviceSize size);
 
 		// Depth buffering
 		void CreateDepthResources(void);
-		vk::Format FindSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features);
+		vk::Format FindSupportedFormat(const std::vector<vk::Format>& candidates,
+			vk::ImageTiling tiling,
+			vk::FormatFeatureFlags features);
 		vk::Format FindDepthFormat(void);
 		bool HasStencilComponent(vk::Format format);
 
 		// Vertex buffer
 		void CreateVertexBuffer(VertexObject& vertexObject);
 		void CreateIndexBuffer(VertexObject& vertexObject);
-		uint32_t FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
+		uint32_t FindMemoryType(uint32_t typeFilter,
+			vk::MemoryPropertyFlags properties);
 		void LoadModel(void);
 
 		// Uniform buffer
@@ -213,10 +227,11 @@ namespace IceFairy {
 
 		void SetupDebugCallback(void);
 
-		static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-			VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-			void* pUserData)
-		{
+		static VKAPI_ATTR VkBool32 VKAPI_CALL
+			debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+				VkDebugUtilsMessageTypeFlagsEXT messageType,
+				const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+				void* pUserData) {
 			unsigned int logLevel;
 
 			switch (messageSeverity) {
@@ -238,10 +253,11 @@ namespace IceFairy {
 				break;
 			}
 
-			Logger::PrintLn(logLevel, "Vulkan Validation Layer: '%s'", pCallbackData->pMessage);
+			Logger::PrintLn(logLevel, "Vulkan Validation Layer: '%s'",
+				pCallbackData->pMessage);
 
 			return VK_FALSE;
 		}
 	};
 
-}
+}  // namespace IceFairy

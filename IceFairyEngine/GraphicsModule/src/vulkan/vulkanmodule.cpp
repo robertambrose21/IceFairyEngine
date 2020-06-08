@@ -23,30 +23,27 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
-VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance instance, 
+VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance instance,
 	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator,
-	VkDebugUtilsMessengerEXT* pCallback)
-{
-	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+	VkDebugUtilsMessengerEXT* pCallback) {
+	auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 	if (func != nullptr) {
 		return func(instance, pCreateInfo, pAllocator, pCallback);
-	}
-	else {
+	} else {
 		return VK_ERROR_EXTENSION_NOT_PRESENT;
 	}
 }
 
 VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT callback,
-	const VkAllocationCallbacks* pAllocator)
-{
-	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+	const VkAllocationCallbacks* pAllocator) {
+	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 	if (func != nullptr) {
 		func(instance, callback, pAllocator);
 	}
 }
 
-IceFairy::VulkanModule::VulkanModule() : Module()
-{ }
+IceFairy::VulkanModule::VulkanModule() : Module() {
+}
 
 // TODO: Catch VulkanExceptions and do stuff sensibly with them
 void IceFairy::VulkanModule::CheckPreconditions(void) {
@@ -439,7 +436,7 @@ void IceFairy::VulkanModule::CreateColorResources(void) {
 }
 
 void IceFairy::VulkanModule::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling,
-		vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::Image& image, vma::Allocation& imageMemory) {
+	vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::Image& image, vma::Allocation& imageMemory) {
 	vk::ImageCreateInfo imageInfo({}, vk::ImageType::e2D, format, vk::Extent3D(width, height, 1), mipLevels, 1,
 		numSamples, tiling, usage, vk::SharingMode::eExclusive, 0, nullptr, vk::ImageLayout::eUndefined);
 
@@ -477,8 +474,7 @@ void IceFairy::VulkanModule::TransitionImageLayout(vk::Image image, vk::Format f
 		if (HasStencilComponent(format)) {
 			subResourceRangeAspectMask |= vk::ImageAspectFlagBits::eStencil;
 		}
-	}
-	else {
+	} else {
 		subResourceRangeAspectMask = vk::ImageAspectFlagBits::eColor;
 	}
 
@@ -486,21 +482,18 @@ void IceFairy::VulkanModule::TransitionImageLayout(vk::Image image, vk::Format f
 		dstAccessMask = vk::AccessFlagBits::eTransferWrite;
 		sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
 		destinationStage = vk::PipelineStageFlagBits::eTransfer;
-	}
-	else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal) {
+	} else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal) {
 		srcAccessMask = vk::AccessFlagBits::eTransferWrite;
 		dstAccessMask = vk::AccessFlagBits::eShaderRead;
 
 		sourceStage = vk::PipelineStageFlagBits::eTransfer;
 		destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
-	}
-	else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal) {
+	} else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal) {
 		dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
 
 		sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
 		destinationStage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
-	}
-	else {
+	} else {
 		throw VulkanException("unsupported layout transition!");
 	}
 
@@ -555,12 +548,12 @@ void IceFairy::VulkanModule::CreateGraphicsPipeline(void) {
 	// TODO: Move elsewhere
 	auto bindingDescription = Vertex::getBindingDescription();
 	auto attributeDescriptions = Vertex::getAttributeDescriptions();
-	vk::PipelineVertexInputStateCreateInfo vertexInputInfo({}, 1, &bindingDescription, 
+	vk::PipelineVertexInputStateCreateInfo vertexInputInfo({}, 1, &bindingDescription,
 		static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data());
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly({}, vk::PrimitiveTopology::eTriangleList, VK_FALSE);
 
-	vk::Viewport viewport(0.0f, 0.0f, (float)swapChainExtent.width, (float)swapChainExtent.height, 0.0f, 1.0f);
+	vk::Viewport viewport(0.0f, 0.0f, (float) swapChainExtent.width, (float) swapChainExtent.height, 0.0f, 1.0f);
 
 	vk::Rect2D scissor({ 0, 0 }, swapChainExtent);
 
@@ -571,7 +564,7 @@ void IceFairy::VulkanModule::CreateGraphicsPipeline(void) {
 
 	vk::PipelineMultisampleStateCreateInfo multisampling({}, msaaSamples, VK_TRUE, .2f);
 
-	vk::PipelineDepthStencilStateCreateInfo depthStencil({}, VK_TRUE, VK_TRUE, vk::CompareOp::eLess, VK_FALSE, 
+	vk::PipelineDepthStencilStateCreateInfo depthStencil({}, VK_TRUE, VK_TRUE, vk::CompareOp::eLess, VK_FALSE,
 		VK_FALSE, {}, {}, 0.0f, 1.0f);
 
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment = {};
@@ -663,8 +656,7 @@ void IceFairy::VulkanModule::CreateFrameBuffers(void) {
 }
 
 std::pair<vk::Buffer, vma::Allocation> IceFairy::VulkanModule::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
-	vk::MemoryPropertyFlags properties)
-{
+	vk::MemoryPropertyFlags properties) {
 	vk::BufferCreateInfo bufferInfo({}, size, usage, vk::SharingMode::eExclusive);
 
 	vma::AllocationCreateInfo allocInfo({}, vma::MemoryUsage::eGpuOnly, properties);
@@ -695,7 +687,7 @@ void IceFairy::VulkanModule::CreateVertexBuffer(VertexObject& vertexObject) {
 
 	void* data;
 	allocator.mapMemory(stagingAllocation, &data);
-	memcpy(data, vertexObject.GetVertices().data(), (size_t)bufferSize);
+	memcpy(data, vertexObject.GetVertices().data(), (size_t) bufferSize);
 	allocator.unmapMemory(stagingAllocation);
 	// TODO: Apparently we have to do this? Doesn't seem to make a difference - find out why. Check VMA docs
 	// v
@@ -722,7 +714,7 @@ void IceFairy::VulkanModule::CreateIndexBuffer(VertexObject& vertexObject) {
 
 	void* data;
 	allocator.mapMemory(stagingAllocation, &data);
-	memcpy(data, vertexObject.GetIndices().data(), (size_t)bufferSize);
+	memcpy(data, vertexObject.GetIndices().data(), (size_t) bufferSize);
 	allocator.unmapMemory(stagingAllocation);
 	allocator.flushAllocation(stagingAllocation, 0, bufferSize);
 
@@ -835,7 +827,7 @@ void IceFairy::VulkanModule::CleanupSwapChain(void) {
 
 	device->GetDevice()->destroyImageView(colorImageView, nullptr);
 	device->GetDevice()->destroyImageView(depthImageView, nullptr);
-	
+
 	for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
 		device->GetDevice()->destroyFramebuffer(swapChainFramebuffers[i], nullptr);
 	}
@@ -914,8 +906,7 @@ void IceFairy::VulkanModule::DrawFrame(void) {
 	if (result == vk::Result::eErrorOutOfDateKHR) {
 		RecreateSwapChain();
 		return;
-	}
-	else if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR) {
+	} else if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR) {
 		throw VulkanException("failed to acquire swap chain image!");
 	}
 
@@ -943,8 +934,7 @@ void IceFairy::VulkanModule::DrawFrame(void) {
 	if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || isFrameBufferResized) {
 		isFrameBufferResized = false;
 		RecreateSwapChain();
-	}
-	else if (result != vk::Result::eSuccess) {
+	} else if (result != vk::Result::eSuccess) {
 		throw VulkanException("failed to present swap chain image!");
 	}
 
@@ -961,7 +951,7 @@ void IceFairy::VulkanModule::UpdateUniformBuffer(uint32_t currentImage) {
 	UniformBufferObject ubo = {};
 	ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
+	ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float) swapChainExtent.height, 0.1f, 10.0f);
 
 	/*GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted.The easiest way to
 	compensate for that is to flip the sign on the scaling factor of the Y axis in the projection matrix.If you don't do
@@ -989,8 +979,7 @@ vk::Format IceFairy::VulkanModule::FindSupportedFormat(const std::vector<vk::For
 
 		if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
 			return format;
-		}
-		else if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features) {
+		} else if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features) {
 			return format;
 		}
 	}
@@ -1006,7 +995,7 @@ vk::Format IceFairy::VulkanModule::FindDepthFormat(void) {
 }
 
 bool IceFairy::VulkanModule::HasStencilComponent(vk::Format format) {
-	return format == vk::Format::eD32SfloatS8Uint|| format == vk::Format::eD24UnormS8Uint;
+	return format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint;
 }
 
 void IceFairy::VulkanModule::SetupDebugCallback(void) {

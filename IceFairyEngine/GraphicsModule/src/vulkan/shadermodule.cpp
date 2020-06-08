@@ -4,8 +4,8 @@ using namespace IceFairy;
 
 ShaderModule::ShaderModule(vk::Device device)
 	: device(device),
-	  isLoaded(false)
-{ }
+	isLoaded(false) {
+}
 
 void ShaderModule::LoadFromFile(const std::string& vertexShader, const std::string& fragmentShader) {
 	Logger::PrintLn(Logger::LEVEL_TRACE, "Loading Vertex Shader: '%s'", vertexShader);
@@ -47,10 +47,10 @@ std::vector<char> ShaderModule::ReadFile(const std::string& filename) {
 	std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
 	if (!file.is_open()) {
-		throw VulkanException("Failed to find shader with filename '"  + filename + "'");
+		throw VulkanException("Failed to find shader with filename '" + filename + "'");
 	}
 
-	size_t fileSize = (size_t)file.tellg();
+	size_t fileSize = (size_t) file.tellg();
 	std::vector<char> buffer(fileSize);
 	file.seekg(0);
 	file.read(buffer.data(), fileSize);

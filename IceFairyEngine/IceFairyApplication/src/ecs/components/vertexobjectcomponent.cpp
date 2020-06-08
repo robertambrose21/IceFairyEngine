@@ -4,8 +4,8 @@ IceFairy::VertexObjectComponent::VertexObjectComponent(
 	const std::vector<unsigned int>& indices,
 	const std::vector<Vertex>& vertices) :
 	indices(std::move(indices)),
-	vertices(std::move(vertices))
-{ }
+	vertices(std::move(vertices)) {
+}
 
 std::vector<unsigned int>& IceFairy::VertexObjectComponent::GetIndicies(void) {
 	return indices;

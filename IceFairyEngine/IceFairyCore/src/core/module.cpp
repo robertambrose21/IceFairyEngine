@@ -2,8 +2,8 @@
 
 using namespace IceFairy;
 
-Module::Module()
-{ }
+Module::Module() {
+}
 
 bool Module::Initialise(void) {
 	for (auto& module : subModules) {
@@ -21,16 +21,16 @@ std::string Module::GetName(void) const {
 }
 
 std::string Module::ListSubModules(void) {
-    if (subModules.empty()) {
-        return "[]";
-    }
+	if (subModules.empty()) {
+		return "[]";
+	}
 
-    std::string list = "[";
+	std::string list = "[";
 
-    for (auto moduleItem : subModules) {
-        auto module = moduleItem.second;
-        list += module->GetName() + ", ";
-    }
+	for (auto moduleItem : subModules) {
+		auto module = moduleItem.second;
+		list += module->GetName() + ", ";
+	}
 
-    return list.substr(0, list.length() - 2) + ']';
+	return list.substr(0, list.length() - 2) + ']';
 }
