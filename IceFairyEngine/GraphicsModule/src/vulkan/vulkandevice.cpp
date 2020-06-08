@@ -102,3 +102,65 @@ IceFairy::SwapChainSupportDetails::Data IceFairy::VulkanDevice::CreateSwapChain(
 		throw VulkanException(std::string("Failed to create swap chain: ") + err.what());
 	}
 }
+
+vk::DescriptorPool IceFairy::VulkanDevice::CreateDescriptorPool(const uint32_t& numSwapChainImages) {
+	std::array<vk::DescriptorPoolSize, 2> poolSizes = {
+		vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, numSwapChainImages),
+		vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, numSwapChainImages)
+	};
+
+	vk::DescriptorPoolCreateInfo poolInfo({}, numSwapChainImages,
+		static_cast<uint32_t>(poolSizes.size()), poolSizes.data());
+
+	descriptorPool = device->createDescriptorPool(poolInfo);
+	return descriptorPool;
+}
+
+vk::DescriptorSetLayout IceFairy::VulkanDevice::CreateDescriptorSetLayout(void) {
+	vk::DescriptorSetLayoutBinding uboLayoutBinding(0, vk::DescriptorType::eUniformBuffer, 1,
+		vk::ShaderStageFlagBits::eVertex);
+	vk::DescriptorSetLayoutBinding samplerLayoutBinding(1, vk::DescriptorType::eCombinedImageSampler, 1,
+		vk::ShaderStageFlagBits::eFragment);
+
+	std::array<vk::DescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
+
+	vk::DescriptorSetLayoutCreateInfo layoutInfo({}, static_cast<uint32_t>(bindings.size()), bindings.data());
+
+	try {
+		descriptorSetLayout = device->createDescriptorSetLayout(layoutInfo);
+		return descriptorSetLayout;
+	}
+	catch (std::runtime_error err) {
+		throw VulkanException("failed to create descriptor set layout!");
+	}
+}
+
+std::vector<vk::DescriptorSet> IceFairy::VulkanDevice::CreateDescriptorSets(const uint32_t& numSwapChainImages,
+		std::vector<std::pair<vk::Buffer, vma::Allocation>> uniformBuffers, vk::Sampler textureSampler,
+		vk::ImageView textureImageView, vk::DeviceSize range) {
+	std::vector<vk::DescriptorSetLayout> layouts(numSwapChainImages, descriptorSetLayout);
+
+	vk::DescriptorSetAllocateInfo allocInfo(descriptorPool, numSwapChainImages, layouts.data());
+
+	try {
+		descriptorSets = device->allocateDescriptorSets(allocInfo);
+	}
+	catch (std::runtime_error err) {
+		throw VulkanException("failed to allocate descriptor sets!");
+	}
+
+	for (size_t i = 0; i < numSwapChainImages; i++) {
+		vk::DescriptorBufferInfo bufferInfo(uniformBuffers[i].first, 0, range);
+
+		vk::DescriptorImageInfo imageInfo(textureSampler, textureImageView, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		std::array<vk::WriteDescriptorSet, 2> descriptorWrites = {
+			vk::WriteDescriptorSet(descriptorSets[i], 0, 0, 1, vk::DescriptorType::eUniformBuffer, nullptr, &bufferInfo),
+			vk::WriteDescriptorSet(descriptorSets[i], 1, 0, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo, nullptr)
+		};
+
+		device->updateDescriptorSets(descriptorWrites, nullptr);
+	}
+
+	return descriptorSets;
+}

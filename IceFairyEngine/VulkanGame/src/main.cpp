@@ -42,6 +42,7 @@
  * - Fix VS2019 related warnings
  * - Move creation of various things like semaphores to VulkanDevice where appropriate
  * - Redo the logger because it's awful. Wait until C++20, adds std::format: https://en.cppreference.com/w/cpp/utility/format/format
+ * - Move allocator into vulkan device
  */
 
 class DemoApplication :

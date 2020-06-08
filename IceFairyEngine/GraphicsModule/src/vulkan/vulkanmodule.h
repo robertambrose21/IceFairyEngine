@@ -203,11 +203,8 @@ namespace IceFairy {
 		void LoadModel(void);
 
 		// Uniform buffer
-		void CreateDescriptorSetLayout(void);
 		void CreateUniformBuffers(void);
 		void UpdateUniformBuffer(uint32_t currentImage);
-		void CreateDescriptorPool(void);
-		void CreateDescriptorSets(void);
 
 		bool CheckDeviceExtensionSupport(vk::PhysicalDevice device);
 

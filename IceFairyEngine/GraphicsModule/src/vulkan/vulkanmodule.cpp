@@ -80,14 +80,11 @@ bool IceFairy::VulkanModule::Initialise(void) {
 	commandPoolManager = std::make_shared<CommandPoolManager>(device, physicalDevice, surface);
 
 	/* Move the following methods to VulkanDevice:
-	 * - CreateDescriptorPool
-	 * - CreateDescriptorSets
 	 * - CreateSwapChain
 	 * - CreateImageViews
 	 * - CreateImageView
 	 * - CreateTextureSampler
 	 * - CreateImage
-	 * - CreateDescriptorSetLayout
 	 * - CreateGraphicsPipeline
 	 * - CreateRenderPass
 	 * - CreateFrameBuffers
@@ -95,13 +92,12 @@ bool IceFairy::VulkanModule::Initialise(void) {
 	 * - CleanupSwapChain
 	 * - RecreateSwapChain
 	 * - DrawFrame?
-	 * - CreateDescriptorSets
 	 */
 
 	CreateSwapChain();
 	CreateImageViews();
 	CreateRenderPass();
-	CreateDescriptorSetLayout();
+	descriptorSetLayout = device->CreateDescriptorSetLayout();
 	CreateGraphicsPipeline();
 	CreateColorResources();
 	CreateDepthResources();
@@ -116,9 +112,11 @@ bool IceFairy::VulkanModule::Initialise(void) {
 		CreateIndexBuffer(vertexObject);
 	}
 
+	uint32_t numSwapChainImages = static_cast<uint32_t>(swapChainImages.size());
+
 	CreateUniformBuffers();
-	CreateDescriptorPool();
-	CreateDescriptorSets();
+	descriptorPool = device->CreateDescriptorPool(numSwapChainImages);
+	descriptorSets = device->CreateDescriptorSets(numSwapChainImages, uniformBuffers, textureSampler, textureImageView, sizeof(UniformBufferObject));
 	commandPoolManager->CreateCommandBuffers(
 		commandBuffers,
 		vertexObjects,
@@ -532,24 +530,6 @@ void IceFairy::VulkanModule::CopyBufferToImage(vk::Buffer buffer, vk::Image imag
 	commandPoolManager->EndSingleTimeCommands(commandBuffer);
 }
 
-void IceFairy::VulkanModule::CreateDescriptorSetLayout(void) {
-	vk::DescriptorSetLayoutBinding uboLayoutBinding(0, vk::DescriptorType::eUniformBuffer, 1,
-		vk::ShaderStageFlagBits::eVertex);
-	vk::DescriptorSetLayoutBinding samplerLayoutBinding(1, vk::DescriptorType::eCombinedImageSampler, 1,
-		vk::ShaderStageFlagBits::eFragment);
-
-	std::array<vk::DescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
-
-	vk::DescriptorSetLayoutCreateInfo layoutInfo({}, static_cast<uint32_t>(bindings.size()), bindings.data());
-
-	try {
-		descriptorSetLayout = device->GetDevice()->createDescriptorSetLayout(layoutInfo);
-	}
-	catch (std::runtime_error err) {
-		throw VulkanException("failed to create descriptor set layout!");
-	}
-}
-
 void IceFairy::VulkanModule::CreateUniformBuffers(void) {
 	vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
 
@@ -860,7 +840,6 @@ void IceFairy::VulkanModule::CleanupSwapChain(void) {
 		device->GetDevice()->destroyFramebuffer(swapChainFramebuffers[i], nullptr);
 	}
 
-
 	device->GetDevice()->destroyPipeline(graphicsPipeline, nullptr);
 	device->GetDevice()->destroyPipelineLayout(pipelineLayout, nullptr);
 	device->GetDevice()->destroyRenderPass(renderPass, nullptr);
@@ -899,8 +878,11 @@ void IceFairy::VulkanModule::RecreateSwapChain(void) {
 	CreateDepthResources();
 	CreateFrameBuffers();
 	CreateUniformBuffers();
-	CreateDescriptorPool();
-	CreateDescriptorSets();
+
+	uint32_t numSwapChainImages = static_cast<uint32_t>(swapChainImages.size());
+
+	descriptorPool = device->CreateDescriptorPool(numSwapChainImages);
+	descriptorSets = device->CreateDescriptorSets(numSwapChainImages, uniformBuffers, textureSampler, textureImageView, sizeof(UniformBufferObject));
 
 	commandPoolManager->CreateCommandBuffers(
 		commandBuffers,
@@ -990,45 +972,6 @@ void IceFairy::VulkanModule::UpdateUniformBuffer(uint32_t currentImage) {
 	allocator.mapMemory(uniformBuffers[currentImage].second, &data);
 	memcpy(data, &ubo, sizeof(ubo));
 	allocator.unmapMemory(uniformBuffers[currentImage].second);
-}
-
-void IceFairy::VulkanModule::CreateDescriptorPool(void) {
-	std::array<vk::DescriptorPoolSize, 2> poolSizes = {
-		vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, static_cast<uint32_t>(swapChainImages.size())),
-		vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, static_cast<uint32_t>(swapChainImages.size()))
-	};
-
-	vk::DescriptorPoolCreateInfo poolInfo({}, static_cast<uint32_t>(swapChainImages.size()),
-		static_cast<uint32_t>(poolSizes.size()), poolSizes.data());
-
-	descriptorPool = device->GetDevice()->createDescriptorPool(poolInfo);
-}
-
-// TODO: Move these into something else, material construction
-void IceFairy::VulkanModule::CreateDescriptorSets(void) {
-	std::vector<vk::DescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
-
-	vk::DescriptorSetAllocateInfo allocInfo(descriptorPool, static_cast<uint32_t>(swapChainImages.size()), layouts.data());
-
-	try {
-		descriptorSets = device->GetDevice()->allocateDescriptorSets(allocInfo);
-	}
-	catch (std::runtime_error err) {
-		throw VulkanException("failed to allocate descriptor sets!");
-	}
-
-	for (size_t i = 0; i < swapChainImages.size(); i++) {
-		vk::DescriptorBufferInfo bufferInfo(uniformBuffers[i].first, 0, sizeof(UniformBufferObject));
-
-		vk::DescriptorImageInfo imageInfo(textureSampler, textureImageView, vk::ImageLayout::eShaderReadOnlyOptimal);
-
-		std::array<vk::WriteDescriptorSet, 2> descriptorWrites = {
-			vk::WriteDescriptorSet(descriptorSets[i], 0, 0, 1, vk::DescriptorType::eUniformBuffer, nullptr, &bufferInfo),
-			vk::WriteDescriptorSet(descriptorSets[i], 1, 0, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo, nullptr)
-		};
-
-		device->GetDevice()->updateDescriptorSets(descriptorWrites, nullptr);
-	}
 }
 
 void IceFairy::VulkanModule::CreateDepthResources(void) {
