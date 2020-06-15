@@ -2,16 +2,20 @@
 
 using namespace IceFairy;
 
-GraphicsModule::GraphicsModule(const std::string& name)
-    : Module(name),
-	  hasErrors(false),
-      windowWidth(0),
-      windowHeight(0),
-      window(NULL),
-      title(""),
-      sceneTree(std::make_shared<SceneTree>()),
-	  timeSinceLastFrame(0L)
+GraphicsModule::GraphicsModule() :
+	Module(),
+	hasErrors(false),
+    windowWidth(0),
+    windowHeight(0),
+    window(NULL),
+    title(""),
+    sceneTree(std::make_shared<SceneTree>()),
+	timeSinceLastFrame(0L)
 { }
+
+std::string IceFairy::GraphicsModule::GetName(void) const {
+	return "GraphicsModule";
+}
 
 bool GraphicsModule::Initialise(void) {
 	if (!Module::Initialise()) {

@@ -2,6 +2,7 @@
 #define __ice_fairy_graphics_module_h__
 
 #include <vector>
+#include <map>
 #include <functional>
 #include <chrono>
 
@@ -78,12 +79,13 @@ namespace IceFairy {
     class GraphicsModule : public Module {
     public:
         /*! \brief Constructor. */
-        GraphicsModule(const std::string& name);
+        GraphicsModule();
         /*! \brief Destructor. */
         virtual ~GraphicsModule() { }
 
+		std::string GetName(void) const;
         /*! \brief Initialises OpenGL */
-        bool                        Initialise(void);
+		bool                        Initialise(void);
         /*! \brief Begins the main graphics loop, executing any drawables present
          *
          * \throws ColourShaderNotSetException

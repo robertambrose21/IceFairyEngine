@@ -12,3 +12,23 @@ Documentation/html
 *.png
 *.sln
 *.diff
+*.a
+
+# CMake stuff (currently not using)
+CMakeFiles/
+CMakeCache.txt
+CMakeLists.txt
+cmake_install.cmake
+Makefile
+
+# VSCode stuff (currently not using)
+.vscode/
+
+# Binaries
+icEngine
+main
+
+# Misc
+ideas.txt
+*.jpg
+*.png

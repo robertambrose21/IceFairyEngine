@@ -3,7 +3,7 @@
 using namespace IceFairy;
 
 void InputRegister::ListenToKeys(int key, int action, int mods) {
-	for (auto keyListener : this->keyListeners) {
+	for (auto& keyListener : this->keyListeners) {
 		switch (action) {
 		case GLFW_PRESS:
 			keyListener->OnKeyDown(key, mods);
@@ -28,7 +28,7 @@ void InputRegister::ListenToKeys(int key, int action, int mods) {
 }
 
 void InputRegister::ListenToMouseMovement(double xpos, double ypos) {
-	for (auto mouseListener : this->mouseListeners) {
+	for (auto& mouseListener : this->mouseListeners) {
 		mouseListener->OnMouseMovement(xpos, ypos);
 	}
 }

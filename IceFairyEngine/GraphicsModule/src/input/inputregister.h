@@ -2,7 +2,8 @@
 
 #include <memory>
 #include <vector>
-#include "../opengl/glinclude.h"
+#include <GLFW/glfw3.h>
+
 #include "core/utilities/logger.h"
 #include "keylistener.h"
 #include "mouselistener.h"
