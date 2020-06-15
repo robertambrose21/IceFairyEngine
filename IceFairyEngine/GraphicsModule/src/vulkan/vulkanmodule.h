@@ -138,7 +138,6 @@ namespace IceFairy {
 		void InitialiseWindow(void);
 		void InitialiseVulkanInstance(void);
 		void CreateSurface(void);
-		void CreateSwapChain(void);
 
 		void RunMainLoop(void);
 
@@ -157,10 +156,7 @@ namespace IceFairy {
 		void CleanupSwapChain(void);
 
 		// Image views
-		void CreateImageViews(void);
-		vk::ImageView CreateImageView(vk::Image image, vk::Format format,
-			vk::ImageAspectFlags aspectFlags,
-			uint32_t mipLevels);
+		std::vector<vk::ImageView> CreateImageViews(void);
 		void CreateTextureImage(void);
 		void CreateTextureImageView(void);
 		void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels,
@@ -189,7 +185,7 @@ namespace IceFairy {
 
 		// Drawing
 		void DrawFrame(void);
-		void CreateTextureSampler(void);
+		//void CreateTextureSampler(void);
 
 		// Semaphores
 		void CreateSyncObjects(void);

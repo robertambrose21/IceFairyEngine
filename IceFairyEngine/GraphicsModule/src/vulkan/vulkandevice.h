@@ -25,9 +25,16 @@ namespace IceFairy {
 
 		vk::DescriptorPool CreateDescriptorPool(const uint32_t& numSwapChainImages);
 		vk::DescriptorSetLayout CreateDescriptorSetLayout(void);
+		// TODO: This is where we pass in uniform buffers, might need to extract this out/think about it some more
 		std::vector<vk::DescriptorSet> CreateDescriptorSets(const uint32_t& numSwapChainImages,
 			std::vector<std::pair<vk::Buffer, vma::Allocation>> uniformBuffers, vk::Sampler textureSampler,
 			vk::ImageView textureImageView, vk::DeviceSize range);
+		vk::ImageView CreateImageView(vk::Image image, vk::Format format,
+			vk::ImageAspectFlags aspectFlags, uint32_t mipLevels);
+		// TODO: Add more parameters we can pass in
+		vk::Sampler CreateTextureSampler(const uint32_t& mipLevels);
+
+		void WaitIdle(void);
 
 	private:
 
