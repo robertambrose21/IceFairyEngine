@@ -132,6 +132,7 @@ namespace IceFairy {
 		vk::ImageView depthImageView;
 
 		// Memory Allocator
+		// TODO: Move to device/other class
 		vma::Allocator allocator;
 
 		// Base Initialisation
@@ -159,11 +160,6 @@ namespace IceFairy {
 		std::vector<vk::ImageView> CreateImageViews(void);
 		void CreateTextureImage(void);
 		void CreateTextureImageView(void);
-		void CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels,
-			vk::SampleCountFlagBits numSamples, vk::Format format,
-			vk::ImageTiling tiling, vk::ImageUsageFlags usage,
-			vk::MemoryPropertyFlags properties, vk::Image& image,
-			vma::Allocation& imageMemory);
 		void TransitionImageLayout(vk::Image image, vk::Format format,
 			vk::ImageLayout oldLayout,
 			vk::ImageLayout newLayout, uint32_t mipLevels);

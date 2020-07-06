@@ -78,7 +78,6 @@ bool IceFairy::VulkanModule::Initialise(void) {
 	commandPoolManager = std::make_shared<CommandPoolManager>(device, physicalDevice, surface);
 
 	/* Move the following methods to VulkanDevice:
-	 * - CreateImage
 	 * - CreateGraphicsPipeline
 	 * - CreateRenderPass
 	 * - CreateFrameBuffers
@@ -110,7 +109,13 @@ bool IceFairy::VulkanModule::Initialise(void) {
 
 	CreateUniformBuffers();
 	descriptorPool = device->CreateDescriptorPool(numSwapChainImages);
-	descriptorSets = device->CreateDescriptorSets(numSwapChainImages, uniformBuffers, textureSampler, textureImageView, sizeof(UniformBufferObject));
+	descriptorSets = device->CreateDescriptorSets(
+		numSwapChainImages,
+		uniformBuffers,
+		textureSampler,
+		textureImageView,
+		sizeof(UniformBufferObject)
+	);
 	commandPoolManager->CreateCommandBuffers(
 		commandBuffers,
 		vertexObjects,
@@ -280,8 +285,11 @@ void IceFairy::VulkanModule::CreateTextureImage(void) {
 		throw VulkanException("failed to load texture image!");
 	}
 
-	auto [stagingBuffer, stagingAllocation] = CreateBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible |
-		vk::MemoryPropertyFlagBits::eHostCoherent);
+	auto [stagingBuffer, stagingAllocation] = CreateBuffer(
+		imageSize,
+		vk::BufferUsageFlagBits::eTransferSrc,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+	);
 
 	void* data;
 	allocator.mapMemory(stagingAllocation, &data);
@@ -291,9 +299,17 @@ void IceFairy::VulkanModule::CreateTextureImage(void) {
 
 	stbi_image_free(pixels);
 
-	CreateImage(texWidth, texHeight, mipLevels, vk::SampleCountFlagBits::e1, vk::Format::eR8G8B8A8Unorm, vk::ImageTiling::eOptimal,
+	std::tie(textureImage, textureImageMemory) = device->CreateImage(
+		texWidth,
+		texHeight,
+		mipLevels,
+		vk::SampleCountFlagBits::e1,
+		vk::Format::eR8G8B8A8Unorm,
+		vk::ImageTiling::eOptimal,
 		vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, textureImage, textureImageMemory);
+		vk::MemoryPropertyFlagBits::eDeviceLocal,
+		allocator
+	);
 
 	TransitionImageLayout(textureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, mipLevels);
 	CopyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
@@ -400,34 +416,19 @@ vk::SampleCountFlagBits IceFairy::VulkanModule::GetMaxUsableSampleCount(void) {
 void IceFairy::VulkanModule::CreateColorResources(void) {
 	vk::Format colorFormat = swapChainImageFormat;
 
-	CreateImage(swapChainExtent.width, swapChainExtent.height, 1, msaaSamples, colorFormat, vk::ImageTiling::eOptimal,
+	std::tie(colorImage, colorImageMemory) = device->CreateImage(
+		swapChainExtent.width,
+		swapChainExtent.height,
+		1,
+		msaaSamples,
+		colorFormat,
+		vk::ImageTiling::eOptimal,
 		vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, colorImage, colorImageMemory);
+		vk::MemoryPropertyFlagBits::eDeviceLocal,
+		allocator
+	);
+
 	colorImageView = device->CreateImageView(colorImage, colorFormat, vk::ImageAspectFlagBits::eColor, 1);
-}
-
-void IceFairy::VulkanModule::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling,
-	vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::Image& image, vma::Allocation& imageMemory) {
-	vk::ImageCreateInfo imageInfo({}, vk::ImageType::e2D, format, vk::Extent3D(width, height, 1), mipLevels, 1,
-		numSamples, tiling, usage, vk::SharingMode::eExclusive, 0, nullptr, vk::ImageLayout::eUndefined);
-
-	try {
-		image = device->GetDevice()->createImage(imageInfo);
-	}
-	catch (std::runtime_error err) {
-		throw VulkanException(std::string("Failed to create image: ") + err.what());
-	}
-
-	vk::MemoryRequirements memRequirements = device->GetDevice()->getImageMemoryRequirements(image);
-
-	try {
-		imageMemory = allocator.allocateMemory(memRequirements, vma::AllocationCreateInfo({}, vma::MemoryUsage::eGpuOnly, properties));
-	}
-	catch (std::runtime_error err) {
-		throw VulkanException(std::string("Failed to allocate image memory: ") + err.what());
-	}
-
-	allocator.bindImageMemory(imageMemory, image);
 }
 
 // TODO: Find out what the fuck is going on in this method
@@ -938,8 +939,18 @@ void IceFairy::VulkanModule::UpdateUniformBuffer(uint32_t currentImage) {
 void IceFairy::VulkanModule::CreateDepthResources(void) {
 	vk::Format depthFormat = FindDepthFormat();
 
-	CreateImage(swapChainExtent.width, swapChainExtent.height, 1, msaaSamples, depthFormat, vk::ImageTiling::eOptimal,
-		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, depthImage, depthImageMemory);
+	std::tie(depthImage, depthImageMemory) = device->CreateImage(
+		swapChainExtent.width,
+		swapChainExtent.height,
+		1,
+		msaaSamples,
+		depthFormat,
+		vk::ImageTiling::eOptimal,
+		vk::ImageUsageFlagBits::eDepthStencilAttachment,
+		vk::MemoryPropertyFlagBits::eDeviceLocal,
+		allocator
+	);
+
 	depthImageView = device->CreateImageView(depthImage, depthFormat, vk::ImageAspectFlagBits::eDepth, 1);
 	TransitionImageLayout(depthImage, depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, 1);
 }

@@ -134,9 +134,13 @@ vk::DescriptorSetLayout IceFairy::VulkanDevice::CreateDescriptorSetLayout(void) 
 	}
 }
 
-std::vector<vk::DescriptorSet> IceFairy::VulkanDevice::CreateDescriptorSets(const uint32_t& numSwapChainImages,
-	std::vector<std::pair<vk::Buffer, vma::Allocation>> uniformBuffers, vk::Sampler textureSampler,
-	vk::ImageView textureImageView, vk::DeviceSize range) {
+std::vector<vk::DescriptorSet> IceFairy::VulkanDevice::CreateDescriptorSets(
+	const uint32_t& numSwapChainImages,
+	std::vector<std::pair<vk::Buffer, vma::Allocation>> uniformBuffers,
+	vk::Sampler textureSampler,
+	vk::ImageView textureImageView,
+	vk::DeviceSize range
+) {
 	std::vector<vk::DescriptorSetLayout> layouts(numSwapChainImages, descriptorSetLayout);
 
 	vk::DescriptorSetAllocateInfo allocInfo(descriptorPool, numSwapChainImages, layouts.data());
@@ -164,8 +168,19 @@ std::vector<vk::DescriptorSet> IceFairy::VulkanDevice::CreateDescriptorSets(cons
 	return descriptorSets;
 }
 
-vk::ImageView IceFairy::VulkanDevice::CreateImageView(vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags, uint32_t mipLevels) {
-	vk::ImageViewCreateInfo viewInfo({}, image, vk::ImageViewType::e2D, format, {}, vk::ImageSubresourceRange(aspectFlags, 0, mipLevels, 0, 1));
+vk::ImageView IceFairy::VulkanDevice::CreateImageView(
+	vk::Image image,
+	vk::Format format,
+	vk::ImageAspectFlags aspectFlags,
+	uint32_t mipLevels
+) {
+	vk::ImageViewCreateInfo viewInfo(
+		{},
+		image,
+		vk::ImageViewType::e2D,
+		format, {},
+		vk::ImageSubresourceRange(aspectFlags, 0, mipLevels, 0, 1)
+	);
 
 	try {
 		return device->createImageView(viewInfo);
@@ -176,9 +191,22 @@ vk::ImageView IceFairy::VulkanDevice::CreateImageView(vk::Image image, vk::Forma
 }
 
 vk::Sampler IceFairy::VulkanDevice::CreateTextureSampler(const uint32_t& mipLevels) {
-	vk::SamplerCreateInfo samplerInfo({}, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear,
-		vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, 0.0f, VK_TRUE,
-		16.0f, VK_FALSE, vk::CompareOp::eAlways, 0, static_cast<float>(mipLevels));
+	vk::SamplerCreateInfo samplerInfo(
+		{},
+		vk::Filter::eLinear,
+		vk::Filter::eLinear,
+		vk::SamplerMipmapMode::eLinear,
+		vk::SamplerAddressMode::eRepeat,
+		vk::SamplerAddressMode::eRepeat,
+		vk::SamplerAddressMode::eRepeat,
+		0.0f,
+		VK_TRUE,
+		16.0f,
+		VK_FALSE,
+		vk::CompareOp::eAlways,
+		0,
+		static_cast<float>(mipLevels)
+	);
 
 	try {
 		return device->createSampler(samplerInfo);
@@ -186,6 +214,57 @@ vk::Sampler IceFairy::VulkanDevice::CreateTextureSampler(const uint32_t& mipLeve
 	catch (std::runtime_error err) {
 		throw VulkanException("failed to create texture sampler!");
 	}
+}
+
+std::pair<vk::Image, vma::Allocation> IceFairy::VulkanDevice::CreateImage(
+	uint32_t width,
+	uint32_t height,
+	uint32_t mipLevels,
+	vk::SampleCountFlagBits numSamples,
+	vk::Format format,
+	vk::ImageTiling tiling,
+	vk::ImageUsageFlags usage,
+	vk::MemoryPropertyFlags properties,
+	vma::Allocator allocator
+) {
+	vk::ImageCreateInfo imageInfo(
+		{},
+		vk::ImageType::e2D,
+		format,
+		vk::Extent3D(width, height, 1),
+		mipLevels,
+		1,
+		numSamples,
+		tiling,
+		usage,
+		vk::SharingMode::eExclusive,
+		0,
+		nullptr,
+		vk::ImageLayout::eUndefined
+	);
+
+	vk::Image image;
+	vma::Allocation imageMemory;
+
+	try {
+		image = device->createImage(imageInfo);
+	}
+	catch (std::runtime_error err) {
+		throw VulkanException(std::string("Failed to create image: ") + err.what());
+	}
+
+	vk::MemoryRequirements memRequirements = device->getImageMemoryRequirements(image);
+
+	try {
+		imageMemory = allocator.allocateMemory(memRequirements, vma::AllocationCreateInfo({}, vma::MemoryUsage::eGpuOnly, properties));
+	}
+	catch (std::runtime_error err) {
+		throw VulkanException(std::string("Failed to allocate image memory: ") + err.what());
+	}
+
+	allocator.bindImageMemory(imageMemory, image);
+
+	return { image, imageMemory };
 }
 
 void IceFairy::VulkanDevice::WaitIdle(void) {
