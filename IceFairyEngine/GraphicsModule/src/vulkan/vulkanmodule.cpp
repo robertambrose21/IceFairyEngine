@@ -77,11 +77,7 @@ bool IceFairy::VulkanModule::Initialise(void) {
 
 	commandPoolManager = std::make_shared<CommandPoolManager>(device, physicalDevice, surface);
 
-	/* Move the following methods to VulkanDevice:
-	 * - CreateGraphicsPipeline
-	 * - CreateRenderPass
-	 * - CreateFrameBuffers
-	 * - CreateSyncObjects
+	/* Move the following methods to VulkanDevice/New SwapChain class:
 	 * - CleanupSwapChain
 	 * - RecreateSwapChain
 	 * - DrawFrame?
@@ -89,12 +85,12 @@ bool IceFairy::VulkanModule::Initialise(void) {
 
 	std::tie(swapChain, swapChainImages, swapChainImageFormat, swapChainExtent) = device->CreateSwapChain(window);
 	swapChainImageViews = std::move(CreateImageViews());
-	CreateRenderPass();
+	renderPass = device->CreateRenderPass(FindDepthFormat(), swapChainImageFormat, msaaSamples);
 	descriptorSetLayout = device->CreateDescriptorSetLayout();
-	CreateGraphicsPipeline();
+	std::tie(pipelineLayout, graphicsPipeline) = device->CreateGraphicsPipeline(swapChainExtent, msaaSamples, renderPass);
 	CreateColorResources();
 	CreateDepthResources();
-	CreateFrameBuffers();
+	swapChainFramebuffers = device->CreateFrameBuffers(swapChainImageViews, swapChainExtent, colorImageView, depthImageView, renderPass);
 	CreateTextureImage();
 	CreateTextureImageView();
 	textureSampler = device->CreateTextureSampler(mipLevels);
@@ -126,7 +122,7 @@ bool IceFairy::VulkanModule::Initialise(void) {
 		pipelineLayout,
 		descriptorSets
 	);
-	CreateSyncObjects();
+	inFlightFences = device->CreateSyncObjects(imageAvailableSemaphores, renderFinishedSemaphores, MAX_FRAMES_IN_FLIGHT);
 
 	return true;
 }
@@ -506,127 +502,6 @@ void IceFairy::VulkanModule::CreateUniformBuffers(void) {
 	}
 }
 
-// Binds shaders and position/colour/texture coords
-void IceFairy::VulkanModule::CreateGraphicsPipeline(void) {
-	ShaderModule module(*device->GetDevice());
-
-	// TODO: Move elsewhere
-	module.LoadFromFile("shaders/vert.spv", "shaders/frag.spv");
-	vk::PipelineShaderStageCreateInfo shaderStages[] = {
-		module.GetVertexShaderStageInfo(),
-		module.GetFragmentShaderStageInfo()
-	};
-
-	// TODO: Move elsewhere
-	auto bindingDescription = Vertex::getBindingDescription();
-	auto attributeDescriptions = Vertex::getAttributeDescriptions();
-	vk::PipelineVertexInputStateCreateInfo vertexInputInfo({}, 1, &bindingDescription,
-		static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data());
-
-	vk::PipelineInputAssemblyStateCreateInfo inputAssembly({}, vk::PrimitiveTopology::eTriangleList, VK_FALSE);
-
-	vk::Viewport viewport(0.0f, 0.0f, (float) swapChainExtent.width, (float) swapChainExtent.height, 0.0f, 1.0f);
-
-	vk::Rect2D scissor({ 0, 0 }, swapChainExtent);
-
-	vk::PipelineViewportStateCreateInfo viewportState({}, 1, &viewport, 1, &scissor);
-
-	vk::PipelineRasterizationStateCreateInfo rasterizer({}, VK_FALSE, VK_FALSE, vk::PolygonMode::eFill,
-		vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise, VK_FALSE, 0.0f, 0.0f, 0.0f, 1.0f);
-
-	vk::PipelineMultisampleStateCreateInfo multisampling({}, msaaSamples, VK_TRUE, .2f);
-
-	vk::PipelineDepthStencilStateCreateInfo depthStencil({}, VK_TRUE, VK_TRUE, vk::CompareOp::eLess, VK_FALSE,
-		VK_FALSE, {}, {}, 0.0f, 1.0f);
-
-	vk::PipelineColorBlendAttachmentState colorBlendAttachment = {};
-	colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-		vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-	colorBlendAttachment.blendEnable = VK_FALSE;
-
-	vk::PipelineColorBlendStateCreateInfo colorBlending({}, VK_FALSE, vk::LogicOp::eCopy, 1,
-		&colorBlendAttachment, { 0.0f, 0.0f, 0.0f, 0.0f });
-
-	// TODO: Catch globally
-	try {
-		pipelineLayout = device->GetDevice()->createPipelineLayout(vk::PipelineLayoutCreateInfo({}, 1, &descriptorSetLayout));
-	}
-	catch (std::runtime_error err) {
-		throw VulkanException("failed to create pipeline layout!");
-	}
-
-	vk::GraphicsPipelineCreateInfo pipelineInfo({}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr,
-		&viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, nullptr, pipelineLayout, renderPass, 0, {}, -1);
-
-	// TODO: Use "createGraphicsPipelines" for multiple pipelines
-	// TODO: Catch globally
-	try {
-		graphicsPipeline = device->GetDevice()->createGraphicsPipeline({}, pipelineInfo);
-		module.CleanUp();
-	}
-	catch (std::runtime_error err) {
-		throw VulkanException("failed to create graphics pipeline!");
-	}
-}
-
-void IceFairy::VulkanModule::CreateRenderPass(void) {
-	vk::AttachmentDescription attachments[3];
-
-	attachments[0] = vk::AttachmentDescription({}, swapChainImageFormat, msaaSamples, vk::AttachmentLoadOp::eClear,
-		vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined,
-		vk::ImageLayout::eColorAttachmentOptimal);
-
-	attachments[1] = vk::AttachmentDescription({}, FindDepthFormat(), msaaSamples, vk::AttachmentLoadOp::eClear,
-		vk::AttachmentStoreOp::eDontCare, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined,
-		vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-	attachments[2] = vk::AttachmentDescription({}, swapChainImageFormat, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eDontCare,
-		vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined,
-		vk::ImageLayout::ePresentSrcKHR);
-
-	vk::AttachmentReference colorAttachmentRef(0, vk::ImageLayout::eColorAttachmentOptimal);
-	vk::AttachmentReference depthAttachmentRef(1, vk::ImageLayout::eDepthStencilAttachmentOptimal);
-	vk::AttachmentReference colorAttachmentResolveRef(2, vk::ImageLayout::eColorAttachmentOptimal);
-
-	vk::SubpassDescription subpass({}, vk::PipelineBindPoint::eGraphics, 0, nullptr, 1,
-		&colorAttachmentRef, &colorAttachmentResolveRef, &depthAttachmentRef);
-
-	vk::SubpassDependency dependency(VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput,
-		vk::PipelineStageFlagBits::eColorAttachmentOutput, {},
-		vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
-
-	// TODO: Catch globally
-	try {
-		renderPass = device->GetDevice()->createRenderPass(vk::RenderPassCreateInfo({}, 3, attachments, 1, &subpass, 1, &dependency));
-	}
-	catch (std::runtime_error err) {
-		throw VulkanException("failed to create render pass!");
-	}
-}
-
-void IceFairy::VulkanModule::CreateFrameBuffers(void) {
-	swapChainFramebuffers.resize(swapChainImageViews.size());
-
-	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-		std::array<vk::ImageView, 3> attachments = {
-			colorImageView,
-			depthImageView,
-			swapChainImageViews[i]
-		};
-
-		vk::FramebufferCreateInfo framebufferInfo({}, renderPass, static_cast<uint32_t>(attachments.size()),
-			attachments.data(), swapChainExtent.width, swapChainExtent.height, 1);
-
-		// TODO: Sort this out
-		try {
-			swapChainFramebuffers[i] = device->GetDevice()->createFramebuffer(framebufferInfo);
-		}
-		catch (std::runtime_error err) {
-			throw VulkanException("failed to create framebuffer!");
-		}
-	}
-}
-
 std::pair<vk::Buffer, vma::Allocation> IceFairy::VulkanModule::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
 	vk::MemoryPropertyFlags properties) {
 	vk::BufferCreateInfo bufferInfo({}, size, usage, vk::SharingMode::eExclusive);
@@ -755,32 +630,6 @@ void IceFairy::VulkanModule::LoadModel(void) {
 	}*/
 }
 
-void IceFairy::VulkanModule::CreateSyncObjects(void) {
-	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-	inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-
-	vk::SemaphoreCreateInfo semaphoreInfo;
-	semaphoreInfo.flags = vk::SemaphoreCreateFlagBits();
-
-	vk::FenceCreateInfo fenceInfo(vk::FenceCreateFlagBits::eSignaled);
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		if (device->GetDevice()->createSemaphore(&semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != vk::Result::eSuccess ||
-			device->GetDevice()->createSemaphore(&semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != vk::Result::eSuccess) {
-
-			throw VulkanException("failed to create synchronization objects for a frame!");
-		}
-
-		try {
-			inFlightFences[i] = device->GetDevice()->createFence(fenceInfo);
-		}
-		catch (std::runtime_error err) {
-			throw VulkanException("failed to create synchronization objects for a frame!");
-		}
-	}
-}
-
 bool IceFairy::VulkanModule::CheckDeviceExtensionSupport(vk::PhysicalDevice device) {
 	std::vector<vk::ExtensionProperties> availableExtensions = device.enumerateDeviceExtensionProperties();
 
@@ -836,11 +685,11 @@ void IceFairy::VulkanModule::RecreateSwapChain(void) {
 
 	std::tie(swapChain, swapChainImages, swapChainImageFormat, swapChainExtent) = device->CreateSwapChain(window);
 	swapChainImageViews = std::move(CreateImageViews());
-	CreateRenderPass();
-	CreateGraphicsPipeline();
+	renderPass = device->CreateRenderPass(FindDepthFormat(), swapChainImageFormat, msaaSamples);
+	std::tie(pipelineLayout, graphicsPipeline) = device->CreateGraphicsPipeline(swapChainExtent, msaaSamples, renderPass);
 	CreateColorResources();
 	CreateDepthResources();
-	CreateFrameBuffers();
+	swapChainFramebuffers = device->CreateFrameBuffers(swapChainImageViews, swapChainExtent, colorImageView, depthImageView, renderPass);
 	CreateUniformBuffers();
 
 	uint32_t numSwapChainImages = static_cast<uint32_t>(swapChainImages.size());
@@ -971,8 +820,13 @@ vk::Format IceFairy::VulkanModule::FindSupportedFormat(const std::vector<vk::For
 
 vk::Format IceFairy::VulkanModule::FindDepthFormat(void) {
 	return FindSupportedFormat(
-		{ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint },
-		vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment
+		{ 
+			vk::Format::eD32Sfloat,
+			vk::Format::eD32SfloatS8Uint,
+			vk::Format::eD24UnormS8Uint
+		},
+		vk::ImageTiling::eOptimal,
+		vk::FormatFeatureFlagBits::eDepthStencilAttachment
 	);
 }
 

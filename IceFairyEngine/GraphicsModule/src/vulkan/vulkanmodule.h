@@ -170,21 +170,8 @@ namespace IceFairy {
 		vk::SampleCountFlagBits GetMaxUsableSampleCount(void);
 		void CreateColorResources(void);
 
-		// Graphics pipeline
-		void CreateGraphicsPipeline(void);
-
-		// Render pass
-		void CreateRenderPass(void);
-
-		// Frame Buffers
-		void CreateFrameBuffers(void);
-
 		// Drawing
 		void DrawFrame(void);
-		//void CreateTextureSampler(void);
-
-		// Semaphores
-		void CreateSyncObjects(void);
 
 		// Buffers
 		std::pair<vk::Buffer, vma::Allocation> CreateBuffer(

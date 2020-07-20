@@ -9,6 +9,8 @@
 #include "validationlayers.h"
 #include "queuefamily.h"
 #include "vulkanexception.h"
+#include "shadermodule.h"
+#include "vertexobject.h"
 
 namespace IceFairy {
 
@@ -57,10 +59,35 @@ namespace IceFairy {
 			vma::Allocator allocator
 		);
 
+		std::pair< vk::PipelineLayout, vk::Pipeline> CreateGraphicsPipeline(
+			vk::Extent2D swapChainExtent,
+			vk::SampleCountFlagBits msaaSamples,
+			vk::RenderPass renderPass
+		);
+
+		vk::RenderPass CreateRenderPass(
+			vk::Format depthFormat,
+			vk::Format swapChainImageFormat,
+			vk::SampleCountFlagBits msaaSamples
+		);
+
+		std::vector<vk::Framebuffer> CreateFrameBuffers(
+			std::vector<vk::ImageView> swapChainImageViews,
+			vk::Extent2D swapChainExtent,
+			vk::ImageView colorImageView,
+			vk::ImageView depthImageView,
+			vk::RenderPass renderPass
+		);
+
+		std::vector<vk::Fence> CreateSyncObjects(
+			std::vector<vk::Semaphore>& imageAvailableSemaphores,
+			std::vector<vk::Semaphore>& renderFinishedSemaphores,
+			const int& maxFramesInFlight
+		);
+
 		void WaitIdle(void);
 
 	private:
-
 		vk::UniqueDevice CreateDevice(
 			const vk::PhysicalDevice& physicalDevice,
 			const vk::SurfaceKHR& surface,
