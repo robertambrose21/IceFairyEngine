@@ -82,12 +82,6 @@ namespace IceFairy {
 
 		std::shared_ptr<VulkanDevice> device;
 
-		vk::SwapchainKHR swapChain;
-		std::vector<vk::Image> swapChainImages;
-		vk::Format swapChainImageFormat;
-		vk::Extent2D swapChainExtent;
-		std::vector<vk::ImageView> swapChainImageViews;
-
 		vk::RenderPass renderPass;
 		vk::DescriptorSetLayout descriptorSetLayout;
 		vk::PipelineLayout pipelineLayout;
@@ -157,7 +151,6 @@ namespace IceFairy {
 		void CleanupSwapChain(void);
 
 		// Image views
-		std::vector<vk::ImageView> CreateImageViews(void);
 		void CreateTextureImage(void);
 		void CreateTextureImageView(void);
 		void TransitionImageLayout(vk::Image image, vk::Format format,

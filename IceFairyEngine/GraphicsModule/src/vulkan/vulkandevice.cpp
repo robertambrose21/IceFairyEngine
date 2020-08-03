@@ -45,20 +45,12 @@ vk::UniqueDevice IceFairy::VulkanDevice::CreateDevice(const vk::PhysicalDevice& 
 	}
 }
 
-vk::Queue IceFairy::VulkanDevice::GetGraphicsQueue(void) {
-	return device->getQueue(indices.graphicsFamily.value(), 0);
-}
-
-vk::Queue IceFairy::VulkanDevice::GetPresentQueue(void) {
-	return device->getQueue(indices.presentFamily.value(), 0);
-}
-
-IceFairy::SwapChainSupportDetails::Data IceFairy::VulkanDevice::CreateSwapChain(GLFWwindow* window) {
+void IceFairy::VulkanDevice::CreateSwapChain(GLFWwindow* window) {
 	SwapChainSupportDetails swapChainSupport = SwapChainSupportDetails::QuerySwapChainSupport(physicalDevice, surface);
 
 	vk::SurfaceFormatKHR surfaceFormat = swapChainSupport.ChooseSwapSurfaceFormat();
 	vk::PresentModeKHR presentMode = swapChainSupport.ChooseSwapPresentMode();
-	vk::Extent2D extent = swapChainSupport.ChooseSwapExtent(window);
+	swapChainExtent = swapChainSupport.ChooseSwapExtent(window);
 
 	uint32_t imageCount = swapChainSupport.GetCapabilities().minImageCount + 1;
 	if (swapChainSupport.GetCapabilities().maxImageCount > 0 && imageCount > swapChainSupport.GetCapabilities().maxImageCount) {
@@ -66,7 +58,7 @@ IceFairy::SwapChainSupportDetails::Data IceFairy::VulkanDevice::CreateSwapChain(
 	}
 
 	vk::SwapchainCreateInfoKHR createInfo({}, surface, imageCount, surfaceFormat.format, surfaceFormat.colorSpace,
-		extent, 1, vk::ImageUsageFlagBits::eColorAttachment);
+		swapChainExtent, 1, vk::ImageUsageFlagBits::eColorAttachment);
 
 	QueueFamily::Indices indices = QueueFamily(physicalDevice, surface).FindQueueFamilies();
 	uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
@@ -88,21 +80,44 @@ IceFairy::SwapChainSupportDetails::Data IceFairy::VulkanDevice::CreateSwapChain(
 	createInfo.oldSwapchain = nullptr;
 
 	try {
-		auto swapChain = device->createSwapchainKHR(createInfo);
-
-		return {
-			swapChain,
-			device->getSwapchainImagesKHR(swapChain),
-			surfaceFormat.format,
-			extent
-		};
+		swapChain = device->createSwapchainKHR(createInfo);
+		swapChainImages = device->getSwapchainImagesKHR(swapChain);
+		swapChainImageFormat = surfaceFormat.format;
+		swapChainImageViews = CreateImageViews();
 	}
 	catch (std::runtime_error err) {
 		throw VulkanException(std::string("Failed to create swap chain: ") + err.what());
 	}
 }
 
-vk::DescriptorPool IceFairy::VulkanDevice::CreateDescriptorPool(const uint32_t& numSwapChainImages) {
+void IceFairy::VulkanDevice::RecreateSwapChain(GLFWwindow* window) {
+	CreateSwapChain(window);
+	swapChainImageViews = CreateImageViews();
+}
+
+void IceFairy::VulkanDevice::CleanupSwapChain(void) {
+	for (auto swapChainImageView : swapChainImageViews) {
+		device->destroyImageView(swapChainImageView, nullptr);
+	}
+
+	device->destroySwapchainKHR(swapChain, nullptr);
+}
+
+
+std::vector<vk::ImageView> IceFairy::VulkanDevice::CreateImageViews(void) {
+	std::vector<vk::ImageView> imageViews;
+
+	for (auto swapChainImage : swapChainImages) {
+		// TODO: Check the mipLevels being 1 at this point
+		imageViews.push_back(CreateImageView(swapChainImage, swapChainImageFormat, vk::ImageAspectFlagBits::eColor, 1));
+	}
+
+	return imageViews;
+}
+
+vk::DescriptorPool IceFairy::VulkanDevice::CreateDescriptorPool(void) {
+	uint32_t numSwapChainImages = GetNumSwapChainImages();
+
 	std::array<vk::DescriptorPoolSize, 2> poolSizes = {
 		vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, numSwapChainImages),
 		vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, numSwapChainImages)
@@ -135,12 +150,12 @@ vk::DescriptorSetLayout IceFairy::VulkanDevice::CreateDescriptorSetLayout(void) 
 }
 
 std::vector<vk::DescriptorSet> IceFairy::VulkanDevice::CreateDescriptorSets(
-	const uint32_t& numSwapChainImages,
 	std::vector<std::pair<vk::Buffer, vma::Allocation>> uniformBuffers,
 	vk::Sampler textureSampler,
 	vk::ImageView textureImageView,
 	vk::DeviceSize range
 ) {
+	uint32_t numSwapChainImages = GetNumSwapChainImages();
 	std::vector<vk::DescriptorSetLayout> layouts(numSwapChainImages, descriptorSetLayout);
 
 	vk::DescriptorSetAllocateInfo allocInfo(descriptorPool, numSwapChainImages, layouts.data());
@@ -374,8 +389,6 @@ vk::RenderPass IceFairy::VulkanDevice::CreateRenderPass(
 }
 
 std::vector<vk::Framebuffer> IceFairy::VulkanDevice::CreateFrameBuffers(
-	std::vector<vk::ImageView> swapChainImageViews,
-	vk::Extent2D swapChainExtent,
 	vk::ImageView colorImageView,
 	vk::ImageView depthImageView,
 	vk::RenderPass renderPass
@@ -437,4 +450,81 @@ std::vector<vk::Fence> IceFairy::VulkanDevice::CreateSyncObjects(
 
 void IceFairy::VulkanDevice::WaitIdle(void) {
 	device->waitIdle();
+}
+
+void IceFairy::VulkanDevice::WaitIdleGraphicsQueue(void) {
+	device->getQueue(indices.graphicsFamily.value(), 0).waitIdle();
+}
+
+vk::Extent2D IceFairy::VulkanDevice::GetSwapChainExtent(void) const {
+	return swapChainExtent;
+}
+
+vk::Format IceFairy::VulkanDevice::GetSwapChainFormat(void) const {
+	return swapChainImageFormat;
+}
+
+vk::Result IceFairy::VulkanDevice::AcquireNextSwapChainImage(
+	const uint32_t& timeout,
+	vk::Semaphore semaphore,
+	vk::Fence fence,
+	uint32_t* pImageIndex
+) {
+	return device->acquireNextImageKHR(swapChain, timeout, semaphore, fence, pImageIndex);
+}
+
+vk::Result IceFairy::VulkanDevice::QueueImageForPresentation(
+	std::vector<vk::Semaphore>& signalSemaphores,
+	std::vector<uint32_t>& imageIndicies
+) {
+	vk::SwapchainKHR swapChains[] = { swapChain };
+	vk::PresentInfoKHR presentInfo(
+		signalSemaphores.size(),
+		signalSemaphores.data(),
+		1,
+		swapChains,
+		imageIndicies.data(),
+		nullptr
+	);
+
+	return device->getQueue(indices.presentFamily.value(), 0).presentKHR(presentInfo);
+}
+
+void IceFairy::VulkanDevice::Submit(
+	std::vector<vk::Semaphore>& waitSemaphores,
+	std::vector<vk::PipelineStageFlags>& waitStages,
+	std::vector<vk::Semaphore>& signalSemaphores,
+	std::vector<vk::CommandBuffer>& commandBuffers,
+	vk::Fence fence
+) {
+	vk::SubmitInfo submitInfo(
+		waitSemaphores.size(),
+		waitSemaphores.data(),
+		waitStages.data(),
+		commandBuffers.size(),
+		commandBuffers.data(),
+		signalSemaphores.size(),
+		signalSemaphores.data()
+	);
+
+	try {
+		device->getQueue(indices.graphicsFamily.value(), 0).submit({ submitInfo }, fence);
+	}
+	catch (std::runtime_error err) {
+		throw VulkanException("failed to submit draw command buffer!");
+	}
+}
+
+void IceFairy::VulkanDevice::Submit(std::vector<vk::CommandBuffer>& commandBuffers) {
+	Submit(
+		std::vector<vk::Semaphore>{},
+		std::vector<vk::PipelineStageFlags>{},
+		std::vector<vk::Semaphore>{},
+		commandBuffers,
+		nullptr
+	);
+}
+
+uint32_t IceFairy::VulkanDevice::GetNumSwapChainImages(void) const {
+	return static_cast<uint32_t>(swapChainImages.size());
 }

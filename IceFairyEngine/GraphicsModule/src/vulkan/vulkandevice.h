@@ -23,27 +23,30 @@ namespace IceFairy {
 		);
 
 		const vk::UniqueDevice& GetDevice(void);
-		vk::Queue GetGraphicsQueue(void);
-		vk::Queue GetPresentQueue(void);
 
-		SwapChainSupportDetails::Data CreateSwapChain(GLFWwindow* window);
+		void CreateSwapChain(GLFWwindow* window);
+		void RecreateSwapChain(GLFWwindow* window);
+		void CleanupSwapChain(void);
+		std::vector<vk::ImageView> CreateImageViews(void);
 
-		vk::DescriptorPool CreateDescriptorPool(const uint32_t& numSwapChainImages);
+		vk::DescriptorPool CreateDescriptorPool(void);
 		vk::DescriptorSetLayout CreateDescriptorSetLayout(void);
+
 		// TODO: This is where we pass in uniform buffers, might need to extract this out/think about it some more
 		std::vector<vk::DescriptorSet> CreateDescriptorSets(
-			const uint32_t& numSwapChainImages,
 			std::vector<std::pair<vk::Buffer, vma::Allocation>> uniformBuffers,
 			vk::Sampler textureSampler,
 			vk::ImageView textureImageView,
 			vk::DeviceSize range
 		);
+
 		vk::ImageView CreateImageView(
 			vk::Image image,
 			vk::Format format,
 			vk::ImageAspectFlags aspectFlags,
 			uint32_t mipLevels
 		);
+
 		// TODO: Add more parameters we can pass in
 		vk::Sampler CreateTextureSampler(const uint32_t& mipLevels);
 
@@ -72,8 +75,6 @@ namespace IceFairy {
 		);
 
 		std::vector<vk::Framebuffer> CreateFrameBuffers(
-			std::vector<vk::ImageView> swapChainImageViews,
-			vk::Extent2D swapChainExtent,
 			vk::ImageView colorImageView,
 			vk::ImageView depthImageView,
 			vk::RenderPass renderPass
@@ -86,6 +87,35 @@ namespace IceFairy {
 		);
 
 		void WaitIdle(void);
+		void WaitIdleGraphicsQueue(void);
+
+		vk::Extent2D GetSwapChainExtent(void) const;
+		vk::Format GetSwapChainFormat(void) const;
+
+		vk::Result AcquireNextSwapChainImage(
+			const uint32_t& timeout,
+			vk::Semaphore semaphore,
+			vk::Fence fence,
+			uint32_t* pImageIndex
+		);
+
+		vk::Result QueueImageForPresentation(
+			std::vector<vk::Semaphore>& signalSemaphores,
+			std::vector<uint32_t>& imageIndicies
+		);
+
+		void Submit(
+			std::vector<vk::Semaphore>& waitSemaphores,
+			std::vector<vk::PipelineStageFlags>& waitStages,
+			std::vector<vk::Semaphore>& signalSemaphores,
+			std::vector<vk::CommandBuffer>& commandBuffers,
+			vk::Fence fence
+		);
+
+		void Submit(std::vector<vk::CommandBuffer>& commandBuffers);
+
+		// TODO: Potentially remove later - only used for uniform buffers
+		uint32_t GetNumSwapChainImages(void) const;
 
 	private:
 		vk::UniqueDevice CreateDevice(
@@ -104,6 +134,12 @@ namespace IceFairy {
 		vk::DescriptorSetLayout descriptorSetLayout;
 		vk::DescriptorPool descriptorPool;
 		std::vector<vk::DescriptorSet> descriptorSets;
+
+		vk::SwapchainKHR swapChain;
+		std::vector<vk::Image> swapChainImages;
+		vk::Format swapChainImageFormat;
+		vk::Extent2D swapChainExtent;
+		std::vector<vk::ImageView> swapChainImageViews;
 	};
 
 }

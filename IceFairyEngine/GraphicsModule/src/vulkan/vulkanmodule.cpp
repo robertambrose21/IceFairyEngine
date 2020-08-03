@@ -83,14 +83,14 @@ bool IceFairy::VulkanModule::Initialise(void) {
 	 * - DrawFrame?
 	 */
 
-	std::tie(swapChain, swapChainImages, swapChainImageFormat, swapChainExtent) = device->CreateSwapChain(window);
-	swapChainImageViews = std::move(CreateImageViews());
-	renderPass = device->CreateRenderPass(FindDepthFormat(), swapChainImageFormat, msaaSamples);
+	device->CreateSwapChain(window);
+
+	renderPass = device->CreateRenderPass(FindDepthFormat(), device->GetSwapChainFormat(), msaaSamples);
 	descriptorSetLayout = device->CreateDescriptorSetLayout();
-	std::tie(pipelineLayout, graphicsPipeline) = device->CreateGraphicsPipeline(swapChainExtent, msaaSamples, renderPass);
+	std::tie(pipelineLayout, graphicsPipeline) = device->CreateGraphicsPipeline(device->GetSwapChainExtent(), msaaSamples, renderPass);
 	CreateColorResources();
 	CreateDepthResources();
-	swapChainFramebuffers = device->CreateFrameBuffers(swapChainImageViews, swapChainExtent, colorImageView, depthImageView, renderPass);
+	swapChainFramebuffers = device->CreateFrameBuffers(colorImageView, depthImageView, renderPass);
 	CreateTextureImage();
 	CreateTextureImageView();
 	textureSampler = device->CreateTextureSampler(mipLevels);
@@ -101,12 +101,9 @@ bool IceFairy::VulkanModule::Initialise(void) {
 		CreateIndexBuffer(vertexObject);
 	}
 
-	uint32_t numSwapChainImages = static_cast<uint32_t>(swapChainImages.size());
-
 	CreateUniformBuffers();
-	descriptorPool = device->CreateDescriptorPool(numSwapChainImages);
+	descriptorPool = device->CreateDescriptorPool();
 	descriptorSets = device->CreateDescriptorSets(
-		numSwapChainImages,
 		uniformBuffers,
 		textureSampler,
 		textureImageView,
@@ -117,7 +114,7 @@ bool IceFairy::VulkanModule::Initialise(void) {
 		vertexObjects,
 		swapChainFramebuffers,
 		renderPass,
-		swapChainExtent,
+		device->GetSwapChainExtent(),
 		graphicsPipeline,
 		pipelineLayout,
 		descriptorSets
@@ -251,6 +248,7 @@ bool IceFairy::VulkanModule::IsDeviceSuitable(vk::PhysicalDevice device) {
 	return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
 }
 
+// TODO: Return something
 void IceFairy::VulkanModule::CreateLogicalDevice(void) {
 	// TODO: Move QueueFamily to central location so it doesn't have to be called twice, VulkanContext maybe?
 	device = std::make_shared<VulkanDevice>(physicalDevice, surface, QueueFamily(physicalDevice, surface).FindQueueFamilies());
@@ -258,16 +256,6 @@ void IceFairy::VulkanModule::CreateLogicalDevice(void) {
 
 void IceFairy::VulkanModule::CreateMemoryAllocator(void) {
 	allocator = vma::createAllocator(vma::AllocatorCreateInfo({}, physicalDevice, *device->GetDevice()));
-}
-
-std::vector<vk::ImageView> IceFairy::VulkanModule::CreateImageViews(void) {
-	std::vector<vk::ImageView> imageViews(swapChainImages.size());
-
-	for (uint32_t i = 0; i < swapChainImages.size(); i++) {
-		imageViews[i] = device->CreateImageView(swapChainImages[i], swapChainImageFormat, vk::ImageAspectFlagBits::eColor, 1);
-	}
-
-	return imageViews;
 }
 
 // TODO: We probably want to move texture creation to another class
@@ -391,6 +379,7 @@ void IceFairy::VulkanModule::GenerateMipmaps(vk::Image image, vk::Format imageFo
 	commandPoolManager->EndSingleTimeCommands(commandBuffer);
 }
 
+// TODO: Return something
 void IceFairy::VulkanModule::CreateTextureImageView(void) {
 	textureImageView = device->CreateImageView(textureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageAspectFlagBits::eColor, mipLevels);
 }
@@ -410,7 +399,8 @@ vk::SampleCountFlagBits IceFairy::VulkanModule::GetMaxUsableSampleCount(void) {
 }
 
 void IceFairy::VulkanModule::CreateColorResources(void) {
-	vk::Format colorFormat = swapChainImageFormat;
+	vk::Format colorFormat = device->GetSwapChainFormat();
+	vk::Extent2D swapChainExtent = device->GetSwapChainExtent();
 
 	std::tie(colorImage, colorImageMemory) = device->CreateImage(
 		swapChainExtent.width,
@@ -494,9 +484,11 @@ void IceFairy::VulkanModule::CopyBufferToImage(vk::Buffer buffer, vk::Image imag
 void IceFairy::VulkanModule::CreateUniformBuffers(void) {
 	vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
 
-	uniformBuffers.resize(swapChainImages.size());
+	uint32_t numSwapChainImages = device->GetNumSwapChainImages();
 
-	for (size_t i = 0; i < swapChainImages.size(); i++) {
+	uniformBuffers.resize(numSwapChainImages);
+
+	for (size_t i = 0; i < numSwapChainImages; i++) {
 		uniformBuffers[i] = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eHostVisible
 			| vk::MemoryPropertyFlagBits::eHostCoherent);
 	}
@@ -657,16 +649,12 @@ void IceFairy::VulkanModule::CleanupSwapChain(void) {
 	device->GetDevice()->destroyPipelineLayout(pipelineLayout, nullptr);
 	device->GetDevice()->destroyRenderPass(renderPass, nullptr);
 
-	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-		device->GetDevice()->destroyImageView(swapChainImageViews[i], nullptr);
-	}
-
-	device->GetDevice()->destroySwapchainKHR(swapChain, nullptr);
+	device->CleanupSwapChain();
 	device->GetDevice()->destroyDescriptorPool(descriptorPool, nullptr);
 
 	commandPoolManager->FreeCommandBuffers(commandBuffers);
 
-	for (size_t i = 0; i < swapChainImages.size(); i++) {
+	for (size_t i = 0; i < device->GetNumSwapChainImages(); i++) {
 		allocator.destroyBuffer(uniformBuffers[i].first, uniformBuffers[i].second);
 	}
 }
@@ -683,26 +671,29 @@ void IceFairy::VulkanModule::RecreateSwapChain(void) {
 
 	CleanupSwapChain();
 
-	std::tie(swapChain, swapChainImages, swapChainImageFormat, swapChainExtent) = device->CreateSwapChain(window);
-	swapChainImageViews = std::move(CreateImageViews());
-	renderPass = device->CreateRenderPass(FindDepthFormat(), swapChainImageFormat, msaaSamples);
-	std::tie(pipelineLayout, graphicsPipeline) = device->CreateGraphicsPipeline(swapChainExtent, msaaSamples, renderPass);
+	device->RecreateSwapChain(window);
+
+	renderPass = device->CreateRenderPass(FindDepthFormat(), device->GetSwapChainFormat(), msaaSamples);
+	std::tie(pipelineLayout, graphicsPipeline) = device->CreateGraphicsPipeline(device->GetSwapChainExtent(), msaaSamples, renderPass);
 	CreateColorResources();
 	CreateDepthResources();
-	swapChainFramebuffers = device->CreateFrameBuffers(swapChainImageViews, swapChainExtent, colorImageView, depthImageView, renderPass);
+	swapChainFramebuffers = device->CreateFrameBuffers(colorImageView, depthImageView, renderPass);
 	CreateUniformBuffers();
 
-	uint32_t numSwapChainImages = static_cast<uint32_t>(swapChainImages.size());
-
-	descriptorPool = device->CreateDescriptorPool(numSwapChainImages);
-	descriptorSets = device->CreateDescriptorSets(numSwapChainImages, uniformBuffers, textureSampler, textureImageView, sizeof(UniformBufferObject));
+	descriptorPool = device->CreateDescriptorPool();
+	descriptorSets = device->CreateDescriptorSets(
+		uniformBuffers,
+		textureSampler,
+		textureImageView,
+		sizeof(UniformBufferObject)
+	);
 
 	commandPoolManager->CreateCommandBuffers(
 		commandBuffers,
 		vertexObjects,
 		swapChainFramebuffers,
 		renderPass,
-		swapChainExtent,
+		device->GetSwapChainExtent(),
 		graphicsPipeline,
 		pipelineLayout,
 		descriptorSets
@@ -722,7 +713,12 @@ void IceFairy::VulkanModule::DrawFrame(void) {
 	device->GetDevice()->waitForFences({ inFlightFences[currentFrame] }, VK_TRUE, std::numeric_limits<uint64_t>::max());
 
 	uint32_t imageIndex;
-	vk::Result result = device->GetDevice()->acquireNextImageKHR(swapChain, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphores[currentFrame], nullptr, &imageIndex);
+	vk::Result result = device->AcquireNextSwapChainImage(
+		std::numeric_limits<uint64_t>::max(),
+		imageAvailableSemaphores[currentFrame],
+		nullptr,
+		&imageIndex
+	);
 
 	if (result == vk::Result::eErrorOutOfDateKHR) {
 		RecreateSwapChain();
@@ -733,24 +729,19 @@ void IceFairy::VulkanModule::DrawFrame(void) {
 
 	UpdateUniformBuffer(imageIndex);
 
-	vk::Semaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
-	vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
-	vk::Semaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
-
-	vk::SubmitInfo submitInfo(1, waitSemaphores, waitStages, 1, &commandBuffers[imageIndex], 1, signalSemaphores);
+	std::vector<vk::Semaphore> waitSemaphores = { imageAvailableSemaphores[currentFrame] };
+	std::vector<vk::PipelineStageFlags> waitStages = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+	std::vector<vk::Semaphore> signalSemaphores = { renderFinishedSemaphores[currentFrame] };
 
 	device->GetDevice()->resetFences({ inFlightFences[currentFrame] });
-
-	try {
-		device->GetGraphicsQueue().submit({ submitInfo }, inFlightFences[currentFrame]);
-	}
-	catch (std::runtime_error err) {
-		throw VulkanException("failed to submit draw command buffer!");
-	}
-
-	vk::SwapchainKHR swapChains[] = { swapChain };
-
-	result = device->GetPresentQueue().presentKHR(vk::PresentInfoKHR(1, signalSemaphores, 1, swapChains, &imageIndex, nullptr));
+	device->Submit(
+		waitSemaphores, 
+		waitStages, 
+		signalSemaphores, 
+		std::vector<vk::CommandBuffer>{ commandBuffers[imageIndex] },
+		inFlightFences[currentFrame]
+	);
+	result = device->QueueImageForPresentation(signalSemaphores, std::vector<uint32_t>{ imageIndex });
 
 	if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || isFrameBufferResized) {
 		isFrameBufferResized = false;
@@ -767,6 +758,8 @@ void IceFairy::VulkanModule::UpdateUniformBuffer(uint32_t currentImage) {
 
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+	vk::Extent2D swapChainExtent = device->GetSwapChainExtent();
 
 	// TODO: This is the camera, need to create a separate class for it
 	UniformBufferObject ubo = {};
@@ -786,6 +779,7 @@ void IceFairy::VulkanModule::UpdateUniformBuffer(uint32_t currentImage) {
 }
 
 void IceFairy::VulkanModule::CreateDepthResources(void) {
+	vk::Extent2D swapChainExtent = device->GetSwapChainExtent();
 	vk::Format depthFormat = FindDepthFormat();
 
 	std::tie(depthImage, depthImageMemory) = device->CreateImage(

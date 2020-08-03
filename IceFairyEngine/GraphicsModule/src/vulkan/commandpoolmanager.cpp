@@ -90,8 +90,8 @@ void IceFairy::CommandPoolManager::EndSingleTimeCommands(vk::CommandBuffer comma
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &commandBuffer;
 
-	deviceHandle->GetGraphicsQueue().submit(1, &submitInfo, nullptr);
-	deviceHandle->GetGraphicsQueue().waitIdle();
+	deviceHandle->Submit(std::vector<vk::CommandBuffer>{ commandBuffer });
+	deviceHandle->WaitIdleGraphicsQueue();
 
 	deviceHandle->GetDevice()->freeCommandBuffers(commandPool, 1, &commandBuffer);
 }
