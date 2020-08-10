@@ -151,8 +151,8 @@ namespace IceFairy {
 		void CleanupSwapChain(void);
 
 		// Image views
-		void CreateTextureImage(void);
-		void CreateTextureImageView(void);
+		std::pair<vk::Image, vma::Allocation> CreateTextureImage(void);
+		vk::ImageView CreateTextureImageView(vk::Image image);
 		void TransitionImageLayout(vk::Image image, vk::Format format,
 			vk::ImageLayout oldLayout,
 			vk::ImageLayout newLayout, uint32_t mipLevels);
@@ -161,7 +161,8 @@ namespace IceFairy {
 		void GenerateMipmaps(vk::Image image, vk::Format imageFormat,
 			int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 		vk::SampleCountFlagBits GetMaxUsableSampleCount(void);
-		void CreateColorResources(void);
+		std::pair<vk::Image, vma::Allocation> CreateColorImage(void);
+		vk::ImageView CreateColorImageView(vk::Image image);
 
 		// Drawing
 		void DrawFrame(void);
@@ -174,7 +175,8 @@ namespace IceFairy {
 			vk::DeviceSize size);
 
 		// Depth buffering
-		void CreateDepthResources(void);
+		std::pair<vk::Image, vma::Allocation> CreateDepthImage(void);
+		vk::ImageView CreateDepthImageView(vk::Image image);
 		vk::Format FindSupportedFormat(const std::vector<vk::Format>& candidates,
 			vk::ImageTiling tiling,
 			vk::FormatFeatureFlags features);
@@ -189,7 +191,8 @@ namespace IceFairy {
 		void LoadModel(void);
 
 		// Uniform buffer
-		void CreateUniformBuffers(void);
+		std::vector<std::pair<vk::Buffer, vma::Allocation>> CreateUniformBuffers(void);
+		// TODO: Pass in the uniform buffers we want to update
 		void UpdateUniformBuffer(uint32_t currentImage);
 
 		bool CheckDeviceExtensionSupport(vk::PhysicalDevice device);

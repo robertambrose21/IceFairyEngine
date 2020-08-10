@@ -85,14 +85,19 @@ bool IceFairy::VulkanModule::Initialise(void) {
 
 	device->CreateSwapChain(window);
 
+	// TODO: Eventually this block should just be a part of RecreateSwapChain with potentially the exception of the vertex objects/LoadModel
+	// ------------------------------------------------------------------------------------------------------------------------------------
 	renderPass = device->CreateRenderPass(FindDepthFormat(), device->GetSwapChainFormat(), msaaSamples);
 	descriptorSetLayout = device->CreateDescriptorSetLayout();
 	std::tie(pipelineLayout, graphicsPipeline) = device->CreateGraphicsPipeline(device->GetSwapChainExtent(), msaaSamples, renderPass);
-	CreateColorResources();
-	CreateDepthResources();
+	std::tie(colorImage, colorImageMemory) = CreateColorImage();
+	colorImageView = CreateColorImageView(colorImage);
+	std::tie(depthImage, depthImageMemory) = CreateDepthImage();
+	depthImageView = CreateDepthImageView(depthImage);
 	swapChainFramebuffers = device->CreateFrameBuffers(colorImageView, depthImageView, renderPass);
-	CreateTextureImage();
-	CreateTextureImageView();
+	std::tie(textureImage, textureImageMemory) = CreateTextureImage();
+
+	textureImageView = CreateTextureImageView(textureImage);
 	textureSampler = device->CreateTextureSampler(mipLevels);
 	LoadModel();
 
@@ -101,7 +106,7 @@ bool IceFairy::VulkanModule::Initialise(void) {
 		CreateIndexBuffer(vertexObject);
 	}
 
-	CreateUniformBuffers();
+	uniformBuffers = std::move(CreateUniformBuffers());
 	descriptorPool = device->CreateDescriptorPool();
 	descriptorSets = device->CreateDescriptorSets(
 		uniformBuffers,
@@ -119,6 +124,7 @@ bool IceFairy::VulkanModule::Initialise(void) {
 		pipelineLayout,
 		descriptorSets
 	);
+	// ------------------------------------------------------------------------------------------------------------------------------------
 	inFlightFences = device->CreateSyncObjects(imageAvailableSemaphores, renderFinishedSemaphores, MAX_FRAMES_IN_FLIGHT);
 
 	return true;
@@ -259,10 +265,11 @@ void IceFairy::VulkanModule::CreateMemoryAllocator(void) {
 }
 
 // TODO: We probably want to move texture creation to another class
-void IceFairy::VulkanModule::CreateTextureImage(void) {
+std::pair<vk::Image, vma::Allocation> IceFairy::VulkanModule::CreateTextureImage(void) {
 	int texWidth, texHeight, texChannels;
 	stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 	vk::DeviceSize imageSize = (uint64_t) texWidth * texHeight * 4;
+	// TODO: Seperate method for mipLevels
 	mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
 
 	if (!pixels) {
@@ -283,7 +290,7 @@ void IceFairy::VulkanModule::CreateTextureImage(void) {
 
 	stbi_image_free(pixels);
 
-	std::tie(textureImage, textureImageMemory) = device->CreateImage(
+	auto [image, imageMemory] = device->CreateImage(
 		texWidth,
 		texHeight,
 		mipLevels,
@@ -295,13 +302,15 @@ void IceFairy::VulkanModule::CreateTextureImage(void) {
 		allocator
 	);
 
-	TransitionImageLayout(textureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, mipLevels);
-	CopyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+	TransitionImageLayout(image, vk::Format::eR8G8B8A8Unorm, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, mipLevels);
+	CopyBufferToImage(stagingBuffer, image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 	// Transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
 
-	GenerateMipmaps(textureImage, vk::Format::eR8G8B8A8Unorm, texWidth, texHeight, mipLevels);
+	GenerateMipmaps(image, vk::Format::eR8G8B8A8Unorm, texWidth, texHeight, mipLevels);
 
 	allocator.destroyBuffer(stagingBuffer, stagingAllocation);
+
+	return { image, imageMemory };
 }
 
 void IceFairy::VulkanModule::GenerateMipmaps(vk::Image image, vk::Format imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels) {
@@ -380,8 +389,8 @@ void IceFairy::VulkanModule::GenerateMipmaps(vk::Image image, vk::Format imageFo
 }
 
 // TODO: Return something
-void IceFairy::VulkanModule::CreateTextureImageView(void) {
-	textureImageView = device->CreateImageView(textureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageAspectFlagBits::eColor, mipLevels);
+vk::ImageView IceFairy::VulkanModule::CreateTextureImageView(vk::Image image) {
+	return device->CreateImageView(image, vk::Format::eR8G8B8A8Unorm, vk::ImageAspectFlagBits::eColor, mipLevels);
 }
 
 vk::SampleCountFlagBits IceFairy::VulkanModule::GetMaxUsableSampleCount(void) {
@@ -398,11 +407,11 @@ vk::SampleCountFlagBits IceFairy::VulkanModule::GetMaxUsableSampleCount(void) {
 	return vk::SampleCountFlagBits::e1;
 }
 
-void IceFairy::VulkanModule::CreateColorResources(void) {
+std::pair<vk::Image, vma::Allocation> IceFairy::VulkanModule::CreateColorImage(void) {
 	vk::Format colorFormat = device->GetSwapChainFormat();
 	vk::Extent2D swapChainExtent = device->GetSwapChainExtent();
 
-	std::tie(colorImage, colorImageMemory) = device->CreateImage(
+	return device->CreateImage(
 		swapChainExtent.width,
 		swapChainExtent.height,
 		1,
@@ -413,8 +422,10 @@ void IceFairy::VulkanModule::CreateColorResources(void) {
 		vk::MemoryPropertyFlagBits::eDeviceLocal,
 		allocator
 	);
+}
 
-	colorImageView = device->CreateImageView(colorImage, colorFormat, vk::ImageAspectFlagBits::eColor, 1);
+vk::ImageView IceFairy::VulkanModule::CreateColorImageView(vk::Image image) {
+	return device->CreateImageView(image, device->GetSwapChainFormat(), vk::ImageAspectFlagBits::eColor, 1);
 }
 
 // TODO: Find out what the fuck is going on in this method
@@ -481,17 +492,20 @@ void IceFairy::VulkanModule::CopyBufferToImage(vk::Buffer buffer, vk::Image imag
 	commandPoolManager->EndSingleTimeCommands(commandBuffer);
 }
 
-void IceFairy::VulkanModule::CreateUniformBuffers(void) {
+std::vector<std::pair<vk::Buffer, vma::Allocation>> IceFairy::VulkanModule::CreateUniformBuffers(void) {
+	std::vector<std::pair<vk::Buffer, vma::Allocation>> buffers;
 	vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
 
 	uint32_t numSwapChainImages = device->GetNumSwapChainImages();
 
-	uniformBuffers.resize(numSwapChainImages);
+	buffers.resize(numSwapChainImages);
 
 	for (size_t i = 0; i < numSwapChainImages; i++) {
-		uniformBuffers[i] = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eHostVisible
+		buffers[i] = CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eHostVisible
 			| vk::MemoryPropertyFlagBits::eHostCoherent);
 	}
+
+	return buffers;
 }
 
 std::pair<vk::Buffer, vma::Allocation> IceFairy::VulkanModule::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
@@ -659,6 +673,8 @@ void IceFairy::VulkanModule::CleanupSwapChain(void) {
 	}
 }
 
+// TODO: This will be renamed.
+// Eventually VulkanDevice#RecreateSwapChain will handle recreation of renderpass/pipeline
 void IceFairy::VulkanModule::RecreateSwapChain(void) {
 	// TODO: This while is when the window is minimized - wait until we unminimize. Separate function might be nice
 	int width = 0, height = 0;
@@ -675,10 +691,12 @@ void IceFairy::VulkanModule::RecreateSwapChain(void) {
 
 	renderPass = device->CreateRenderPass(FindDepthFormat(), device->GetSwapChainFormat(), msaaSamples);
 	std::tie(pipelineLayout, graphicsPipeline) = device->CreateGraphicsPipeline(device->GetSwapChainExtent(), msaaSamples, renderPass);
-	CreateColorResources();
-	CreateDepthResources();
+	std::tie(colorImage, colorImageMemory) = CreateColorImage();
+	colorImageView = CreateColorImageView(colorImage);
+	std::tie(depthImage, depthImageMemory) = CreateDepthImage();
+	depthImageView = CreateDepthImageView(depthImage);
 	swapChainFramebuffers = device->CreateFrameBuffers(colorImageView, depthImageView, renderPass);
-	CreateUniformBuffers();
+	uniformBuffers = std::move(CreateUniformBuffers());
 
 	descriptorPool = device->CreateDescriptorPool();
 	descriptorSets = device->CreateDescriptorSets(
@@ -778,11 +796,11 @@ void IceFairy::VulkanModule::UpdateUniformBuffer(uint32_t currentImage) {
 	allocator.unmapMemory(uniformBuffers[currentImage].second);
 }
 
-void IceFairy::VulkanModule::CreateDepthResources(void) {
+std::pair<vk::Image, vma::Allocation> IceFairy::VulkanModule::CreateDepthImage(void) {
 	vk::Extent2D swapChainExtent = device->GetSwapChainExtent();
 	vk::Format depthFormat = FindDepthFormat();
 
-	std::tie(depthImage, depthImageMemory) = device->CreateImage(
+	return device->CreateImage(
 		swapChainExtent.width,
 		swapChainExtent.height,
 		1,
@@ -793,9 +811,15 @@ void IceFairy::VulkanModule::CreateDepthResources(void) {
 		vk::MemoryPropertyFlagBits::eDeviceLocal,
 		allocator
 	);
+}
 
-	depthImageView = device->CreateImageView(depthImage, depthFormat, vk::ImageAspectFlagBits::eDepth, 1);
-	TransitionImageLayout(depthImage, depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, 1);
+vk::ImageView IceFairy::VulkanModule::CreateDepthImageView(vk::Image image) {
+	vk::Format depthFormat = FindDepthFormat();
+
+	vk::ImageView depthImageView = device->CreateImageView(image, depthFormat, vk::ImageAspectFlagBits::eDepth, 1);
+	TransitionImageLayout(image, depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, 1);
+
+	return depthImageView;
 }
 
 vk::Format IceFairy::VulkanModule::FindSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features) {

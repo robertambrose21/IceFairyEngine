@@ -62,7 +62,7 @@ namespace IceFairy {
 			vma::Allocator allocator
 		);
 
-		std::pair< vk::PipelineLayout, vk::Pipeline> CreateGraphicsPipeline(
+		std::pair<vk::PipelineLayout, vk::Pipeline> CreateGraphicsPipeline(
 			vk::Extent2D swapChainExtent,
 			vk::SampleCountFlagBits msaaSamples,
 			vk::RenderPass renderPass
@@ -74,6 +74,7 @@ namespace IceFairy {
 			vk::SampleCountFlagBits msaaSamples
 		);
 
+		// TODO: Be more flexible about framebuffers passed in
 		std::vector<vk::Framebuffer> CreateFrameBuffers(
 			vk::ImageView colorImageView,
 			vk::ImageView depthImageView,
