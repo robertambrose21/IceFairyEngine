@@ -77,6 +77,11 @@ bool IceFairy::VulkanModule::Initialise(void) {
 
 	commandPoolManager = std::make_shared<CommandPoolManager>(device, physicalDevice, surface);
 
+	/*
+	 * TODO:
+	 * - Allow device to control creation/destruction of image views
+	 */
+
 	/* Move the following methods to VulkanDevice/New SwapChain class:
 	 * - CleanupSwapChain
 	 * - RecreateSwapChain
@@ -94,7 +99,7 @@ bool IceFairy::VulkanModule::Initialise(void) {
 	colorImageView = CreateColorImageView(colorImage);
 	std::tie(depthImage, depthImageMemory) = CreateDepthImage();
 	depthImageView = CreateDepthImageView(depthImage);
-	swapChainFramebuffers = device->CreateFrameBuffers(colorImageView, depthImageView, renderPass);
+	swapChainFramebuffers = device->CreateFrameBuffers({ colorImageView, depthImageView }, renderPass);
 	std::tie(textureImage, textureImageMemory) = CreateTextureImage();
 
 	textureImageView = CreateTextureImageView(textureImage);
@@ -659,18 +664,20 @@ void IceFairy::VulkanModule::CleanupSwapChain(void) {
 		device->GetDevice()->destroyFramebuffer(swapChainFramebuffers[i], nullptr);
 	}
 
+	device->GetDevice()->destroyDescriptorPool(descriptorPool, nullptr);
+
+	for (size_t i = 0; i < device->GetNumSwapChainImages(); i++) {
+		allocator.destroyBuffer(uniformBuffers[i].first, uniformBuffers[i].second);
+	}
+
 	device->GetDevice()->destroyPipeline(graphicsPipeline, nullptr);
 	device->GetDevice()->destroyPipelineLayout(pipelineLayout, nullptr);
 	device->GetDevice()->destroyRenderPass(renderPass, nullptr);
 
 	device->CleanupSwapChain();
-	device->GetDevice()->destroyDescriptorPool(descriptorPool, nullptr);
+	
 
 	commandPoolManager->FreeCommandBuffers(commandBuffers);
-
-	for (size_t i = 0; i < device->GetNumSwapChainImages(); i++) {
-		allocator.destroyBuffer(uniformBuffers[i].first, uniformBuffers[i].second);
-	}
 }
 
 // TODO: This will be renamed.
@@ -695,7 +702,7 @@ void IceFairy::VulkanModule::RecreateSwapChain(void) {
 	colorImageView = CreateColorImageView(colorImage);
 	std::tie(depthImage, depthImageMemory) = CreateDepthImage();
 	depthImageView = CreateDepthImageView(depthImage);
-	swapChainFramebuffers = device->CreateFrameBuffers(colorImageView, depthImageView, renderPass);
+	swapChainFramebuffers = device->CreateFrameBuffers({ colorImageView, depthImageView }, renderPass);
 	uniformBuffers = std::move(CreateUniformBuffers());
 
 	descriptorPool = device->CreateDescriptorPool();

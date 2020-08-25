@@ -389,18 +389,14 @@ vk::RenderPass IceFairy::VulkanDevice::CreateRenderPass(
 }
 
 std::vector<vk::Framebuffer> IceFairy::VulkanDevice::CreateFrameBuffers(
-	vk::ImageView colorImageView,
-	vk::ImageView depthImageView,
+	std::vector<vk::ImageView> imageViews,
 	vk::RenderPass renderPass
 ) {
 	std::vector<vk::Framebuffer> swapChainFramebuffers;
 
 	for (auto& swapChainImageView : swapChainImageViews) {
-		std::array<vk::ImageView, 3> attachments = {
-			colorImageView,
-			depthImageView,
-			swapChainImageView
-		};
+		std::vector<vk::ImageView> attachments = imageViews;
+		attachments.push_back(swapChainImageView);
 
 		vk::FramebufferCreateInfo framebufferInfo({}, renderPass, static_cast<uint32_t>(attachments.size()),
 			attachments.data(), swapChainExtent.width, swapChainExtent.height, 1);

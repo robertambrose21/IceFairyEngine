@@ -74,10 +74,8 @@ namespace IceFairy {
 			vk::SampleCountFlagBits msaaSamples
 		);
 
-		// TODO: Be more flexible about framebuffers passed in
 		std::vector<vk::Framebuffer> CreateFrameBuffers(
-			vk::ImageView colorImageView,
-			vk::ImageView depthImageView,
+			std::vector<vk::ImageView> imageViews,
 			vk::RenderPass renderPass
 		);
 
