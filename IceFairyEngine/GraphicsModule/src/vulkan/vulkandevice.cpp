@@ -521,6 +521,10 @@ void IceFairy::VulkanDevice::Submit(std::vector<vk::CommandBuffer>& commandBuffe
 	);
 }
 
+void IceFairy::VulkanDevice::WaitForFences(std::vector<vk::Fence> fences) {
+	device->waitForFences(fences, VK_TRUE, std::numeric_limits<uint64_t>::max());
+}
+
 uint32_t IceFairy::VulkanDevice::GetNumSwapChainImages(void) const {
 	return static_cast<uint32_t>(swapChainImages.size());
 }

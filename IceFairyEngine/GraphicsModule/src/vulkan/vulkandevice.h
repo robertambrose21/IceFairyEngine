@@ -113,6 +113,8 @@ namespace IceFairy {
 
 		void Submit(std::vector<vk::CommandBuffer>& commandBuffers);
 
+		void WaitForFences(std::vector<vk::Fence> fences);
+
 		// TODO: Potentially remove later - only used for uniform buffers
 		uint32_t GetNumSwapChainImages(void) const;
 

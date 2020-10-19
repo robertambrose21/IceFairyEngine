@@ -735,7 +735,7 @@ void IceFairy::VulkanModule::RunMainLoop(void) {
 }
 
 void IceFairy::VulkanModule::DrawFrame(void) {
-	device->GetDevice()->waitForFences({ inFlightFences[currentFrame] }, VK_TRUE, std::numeric_limits<uint64_t>::max());
+	device->WaitForFences({ inFlightFences[currentFrame] });
 
 	uint32_t imageIndex;
 	vk::Result result = device->AcquireNextSwapChainImage(
