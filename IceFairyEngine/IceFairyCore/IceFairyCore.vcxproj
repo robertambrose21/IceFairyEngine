@@ -142,7 +142,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);..\..\Dependencies\glfw-3.2.1.bin.WIN64\include;..\..\Dependencies\glew-2.1.0\include</AdditionalIncludeDirectories>
       <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
