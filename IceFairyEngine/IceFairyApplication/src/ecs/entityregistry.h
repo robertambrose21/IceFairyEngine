@@ -38,7 +38,7 @@ namespace IceFairy {
 		// TODO: Multithreading and consider moving to a special JobSystem class
 		template<typename... Ts>
 		void Schedule(std::shared_ptr<JobSystem<Ts...>> system) {
-			for (auto [id, entity] : entities) {
+			for (auto &[id, entity] : entities) {
 				if ((entity->HasComponent<Ts>() && ...)) {
 					system->Execute(entity->GetComponent<Ts>()...);
 				}
